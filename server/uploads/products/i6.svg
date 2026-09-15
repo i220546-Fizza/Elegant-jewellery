@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 600" width="600" height="600" role="img" aria-label="Pendant Grace Necklace - Elegant Jewellery">
+  <title>Pendant Grace Necklace - Elegant Jewellery</title>
+  <defs>
+    <radialGradient id="bg5" cx="50%" cy="45%" r="65%">
+      <stop offset="0%" stop-color="#FBF6EE"/>
+      <stop offset="100%" stop-color="#F0E4CF"/>
+    </radialGradient>
+    <linearGradient id="gold5" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#C9A86A"/>
+      <stop offset="100%" stop-color="#8A6B3D"/>
+    </linearGradient>
+    <radialGradient id="gem5" cx="35%" cy="30%" r="70%">
+      <stop offset="0%" stop-color="#FFFFFF"/>
+      <stop offset="55%" stop-color="#FFFFFF"/>
+      <stop offset="100%" stop-color="#FFFFFF"/>
+    </radialGradient>
+  </defs>
+  <rect width="600" height="600" fill="url(#bg5)"/>
+  <circle cx="300" cy="300" r="230" fill="none" stroke="#C9A86A" stroke-width="1" opacity="0.25"/>
+
+  <path d="M 150 130 Q 300 360 450 130" fill="none" stroke="url(#gold5)" stroke-width="4"/>
+  <circle cx="300" cy="360" r="30" fill="url(#gem5)" stroke="url(#gold5)" stroke-width="4"/>
+  <path d="M 300 390 L 288 430 L 312 430 Z" fill="url(#gold5)"/>
+  <circle cx="180" cy="320" r="4" fill="url(#gold5)"/>
+  <circle cx="240" cy="350" r="4" fill="url(#gold5)"/>
+  <circle cx="360" cy="350" r="4" fill="url(#gold5)"/>
+  <circle cx="420" cy="320" r="4" fill="url(#gold5)"/>
+  <g stroke="url(#gold5)" stroke-width="2" stroke-linecap="round" opacity="0.85">
+    <line x1="378" y1="210" x2="402" y2="210"/>
+    <line x1="390" y1="198" x2="390" y2="222"/>
+  </g>
+  <text x="300" y="560" text-anchor="middle" font-family="Georgia, 'Times New Roman', serif" font-size="15" letter-spacing="4" fill="#8A6B3D" opacity="0.55">ELEGANT JEWELLERY</text>
+</svg>

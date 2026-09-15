@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 1200" width="1000" height="1200" role="img" aria-label="Elegant Jewellery craftsmanship illustration">
+  <defs>
+    <radialGradient id="aboutBg" cx="50%" cy="35%" r="75%">
+      <stop offset="0%" stop-color="#FAF3E7"/>
+      <stop offset="100%" stop-color="#E9D7B8"/>
+    </radialGradient>
+    <linearGradient id="aboutGold" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#D9B87B"/>
+      <stop offset="100%" stop-color="#87693B"/>
+    </linearGradient>
+    <radialGradient id="aboutGem" cx="35%" cy="30%" r="70%">
+      <stop offset="0%" stop-color="#FFFFFF"/>
+      <stop offset="60%" stop-color="#F2E6C9"/>
+      <stop offset="100%" stop-color="#E9D7B0"/>
+    </radialGradient>
+  </defs>
+  <rect width="1000" height="1200" fill="url(#aboutBg)"/>
+  <circle cx="500" cy="470" r="270" fill="none" stroke="#B7935A" stroke-width="1" opacity="0.3"/>
+  <path d="M 320 380 Q 500 600 680 380" fill="none" stroke="url(#aboutGold)" stroke-width="5"/>
+  <circle cx="500" cy="560" r="52" fill="url(#aboutGem)" stroke="url(#aboutGold)" stroke-width="6"/>
+  <path d="M 500 612 L 478 672 L 522 672 Z" fill="url(#aboutGold)"/>
+  <circle cx="500" cy="860" r="110" fill="none" stroke="url(#aboutGold)" stroke-width="10"/>
+  <path d="M 500 750 L 468 700 L 500 670 L 532 700 Z" fill="url(#aboutGold)"/>
+  <circle cx="500" cy="704" r="28" fill="url(#aboutGem)" stroke="url(#aboutGold)" stroke-width="5"/>
+</svg>
