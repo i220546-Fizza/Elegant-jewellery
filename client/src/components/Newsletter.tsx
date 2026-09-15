@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import toast from 'react-hot-toast';
+import Reveal from './Reveal';
 
 const Newsletter = () => {
   const [email, setEmail] = useState('');
@@ -12,10 +13,11 @@ const Newsletter = () => {
   };
 
   return (
-    <section className="bg-brown-dark py-20 text-ivory">
-      <div className="container-luxe flex flex-col items-center text-center">
+    <section className="relative overflow-hidden bg-brown-dark py-20 text-ivory">
+      <div className="pointer-events-none absolute left-1/2 top-0 h-72 w-72 -translate-x-1/2 -translate-y-1/2 rounded-full bg-gold-light/10 blur-3xl" />
+      <Reveal className="container-luxe flex flex-col items-center text-center">
         <p className="section-kicker text-champagne">Stay In Touch</p>
-        <h2 className="mt-3 font-display text-3xl sm:text-4xl">Join Our Inner Circle</h2>
+        <h2 className="mt-3 font-display text-3xl sm:text-4xl">Join Our World of Elegance</h2>
         <p className="mt-4 max-w-md text-sm text-ivory/70">
           Be the first to know about new arrivals, exclusive offers and styling inspiration.
         </p>
@@ -32,7 +34,7 @@ const Newsletter = () => {
             Subscribe
           </button>
         </form>
-      </div>
+      </Reveal>
     </section>
   );
 };

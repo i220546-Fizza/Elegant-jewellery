@@ -4,6 +4,19 @@ A full-stack, production-quality e-commerce website for **Elegant Jewellery** �
 
 > This repository was empty when this build started (no prior commits, no product images). Since no product photography existed and external image hosts are blocked by this environment's network policy, all product/hero imagery was generated as original, cohesive line-art SVG artwork in the brand's champagne-gold palette (see **Product Images** below). Everything else — auth, cart, checkout, orders, reviews, wishlist, admin panel — is fully wired to a real MongoDB database, not mocked.
 
+## Design System (3D Luxury Redesign)
+
+The storefront was redesigned around a "luxury showroom" feel using **Framer Motion** plus native CSS 3D transforms — no Three.js/WebGL, so it stays fast and lightweight:
+
+- `src/hooks/useTilt.ts` — spring-driven 3D tilt-on-hover for product/category cards (`perspective` + `rotateX/rotateY`), no-ops under `prefers-reduced-motion`.
+- `src/components/Reveal.tsx` — scroll-triggered fade/slide-up wrapper (`whileInView`) used across every homepage section for the "fashion site" scroll feel.
+- `src/components/Hero.tsx` — mouse-parallax floating jewellery pieces, ambient glow blobs, gold particles, all disabled under reduced motion.
+- `src/components/CartDrawer.tsx` — glassmorphism slide-in bag, opened from the navbar cart icon (`CartContext.isDrawerOpen`), with Escape-to-close and scroll lock.
+- `src/components/FeaturedCollection.tsx` / `BrandStory.tsx` / `InteractiveShowcase.tsx` — new homepage sections (asymmetric bento grid, split-layout scroll parallax, glass "display case" spotlight).
+- Admin panel intentionally stays plain/professional (no 3D effects), and is code-split via `React.lazy` so customers never download that bundle.
+- `@media (prefers-reduced-motion: reduce)` in `index.css` strips CSS keyframe animations globally; Framer Motion components separately check `useReducedMotion()`.
+- Verified with Playwright at 1440px and 390px viewports: no horizontal overflow on any page, no console/runtime errors.
+
 ---
 
 ## 1. Project Structure

@@ -107,7 +107,7 @@ const Contact = () => {
             </div>
           </div>
 
-          <div>
+          <div id="faq" className="scroll-mt-28">
             <h3 className="font-display text-xl text-brown-dark">Frequently Asked Questions</h3>
             <div className="mt-2">
               {FAQS.map((f) => (

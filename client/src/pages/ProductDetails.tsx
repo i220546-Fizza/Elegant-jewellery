@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import toast from 'react-hot-toast';
+import { motion } from 'framer-motion';
 import type { Product } from '../types';
 import { fetchProductByIdOrSlug, fetchRelatedProducts, submitProductReview } from '../services/productService';
 import { getErrorMessage } from '../services/api';
@@ -8,10 +9,12 @@ import { formatCurrency, categoryLabel } from '../utils/format';
 import { useCart } from '../context/CartContext';
 import { useWishlist } from '../context/WishlistContext';
 import { useAuth } from '../context/AuthContext';
+import useTilt from '../hooks/useTilt';
 import LoadingSpinner from '../components/LoadingSpinner';
 import QuantitySelector from '../components/QuantitySelector';
 import StarRating from '../components/StarRating';
 import ProductGrid from '../components/ProductGrid';
+import Reveal from '../components/Reveal';
 import { HeartIcon } from '../components/Icons';
 
 type Tab = 'details' | 'reviews';
@@ -33,6 +36,7 @@ const ProductDetails = () => {
   const [reviewRating, setReviewRating] = useState(5);
   const [reviewComment, setReviewComment] = useState('');
   const [submittingReview, setSubmittingReview] = useState(false);
+  const tilt = useTilt({ max: 6, scale: 1.03 });
 
   useEffect(() => {
     if (!slug) return;
@@ -122,13 +126,24 @@ const ProductDetails = () => {
 
       <div className="grid grid-cols-1 gap-10 lg:grid-cols-2">
         <div>
-          <div className="group aspect-square overflow-hidden rounded-2xl bg-beige shadow-card">
+          <motion.div
+            ref={tilt.ref}
+            onMouseMove={tilt.onMouseMove}
+            onMouseLeave={tilt.onMouseLeave}
+            style={{
+              rotateX: tilt.style.rotateX,
+              rotateY: tilt.style.rotateY,
+              scale: tilt.style.scale,
+              transformPerspective: tilt.style.transformPerspective,
+            }}
+            className="group aspect-square overflow-hidden rounded-2xl bg-beige shadow-card transition-shadow duration-500 hover:shadow-glow"
+          >
             <img
               src={product.images[activeImage]}
               alt={product.name}
               className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
             />
-          </div>
+          </motion.div>
           {product.images.length > 1 && (
             <div className="mt-4 flex gap-3">
               {product.images.map((img, i) => (
@@ -287,10 +302,10 @@ const ProductDetails = () => {
       </div>
 
       {related.length > 0 && (
-        <div className="mt-20">
+        <Reveal className="mt-20">
           <h2 className="section-heading mb-8 text-center">You May Also Like</h2>
           <ProductGrid products={related} />
-        </div>
+        </Reveal>
       )}
     </div>
   );

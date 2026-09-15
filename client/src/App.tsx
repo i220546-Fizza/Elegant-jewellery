@@ -1,7 +1,9 @@
+import { lazy, Suspense } from 'react';
 import { Route, Routes } from 'react-router-dom';
 import MainLayout from './layouts/MainLayout';
 import AdminLayout from './layouts/AdminLayout';
 import ProtectedRoute from './components/ProtectedRoute';
+import LoadingSpinner from './components/LoadingSpinner';
 
 import Home from './pages/Home';
 import Shop from './pages/Shop';
@@ -17,13 +19,18 @@ import Profile from './pages/Profile';
 import Wishlist from './pages/Wishlist';
 import About from './pages/About';
 import Contact from './pages/Contact';
+import Shipping from './pages/Shipping';
+import Returns from './pages/Returns';
+import Privacy from './pages/Privacy';
 import NotFound from './pages/NotFound';
 
-import AdminDashboard from './pages/admin/AdminDashboard';
-import AdminProducts from './pages/admin/AdminProducts';
-import AdminProductForm from './pages/admin/AdminProductForm';
-import AdminOrders from './pages/admin/AdminOrders';
-import AdminOrderDetails from './pages/admin/AdminOrderDetails';
+// Admin panel is customer-invisible, so it's code-split out of the main
+// storefront bundle rather than shipped to every shopper.
+const AdminDashboard = lazy(() => import('./pages/admin/AdminDashboard'));
+const AdminProducts = lazy(() => import('./pages/admin/AdminProducts'));
+const AdminProductForm = lazy(() => import('./pages/admin/AdminProductForm'));
+const AdminOrders = lazy(() => import('./pages/admin/AdminOrders'));
+const AdminOrderDetails = lazy(() => import('./pages/admin/AdminOrderDetails'));
 
 function App() {
   return (
@@ -38,6 +45,9 @@ function App() {
         <Route path="/wishlist" element={<Wishlist />} />
         <Route path="/about" element={<About />} />
         <Route path="/contact" element={<Contact />} />
+        <Route path="/shipping" element={<Shipping />} />
+        <Route path="/returns" element={<Returns />} />
+        <Route path="/privacy" element={<Privacy />} />
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<Signup />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
@@ -57,7 +67,9 @@ function App() {
         path="/admin"
         element={
           <ProtectedRoute adminOnly>
-            <AdminLayout />
+            <Suspense fallback={<LoadingSpinner fullScreen label="Loading admin panel" />}>
+              <AdminLayout />
+            </Suspense>
           </ProtectedRoute>
         }
       >

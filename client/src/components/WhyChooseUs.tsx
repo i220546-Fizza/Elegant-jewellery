@@ -1,4 +1,5 @@
 import { GiftIcon, ShieldIcon, SparkleIcon, TruckIcon } from './Icons';
+import Reveal from './Reveal';
 
 const FEATURES = [
   {
@@ -26,19 +27,19 @@ const FEATURES = [
 const WhyChooseUs = () => (
   <section className="bg-cream py-20">
     <div className="container-luxe">
-      <div className="mx-auto max-w-2xl text-center">
+      <Reveal className="mx-auto max-w-2xl text-center">
         <p className="section-kicker">Why Elegant Jewellery</p>
         <h2 className="section-heading mt-3">Crafted With Care, Worn With Confidence</h2>
-      </div>
+      </Reveal>
       <div className="mt-14 grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-4">
-        {FEATURES.map(({ icon: Icon, title, text }) => (
-          <div key={title} className="flex flex-col items-center gap-4 text-center">
-            <span className="flex h-16 w-16 items-center justify-center rounded-full bg-white text-champagne-dark shadow-card">
+        {FEATURES.map(({ icon: Icon, title, text }, i) => (
+          <Reveal key={title} delay={i * 0.08} className="flex flex-col items-center gap-4 text-center">
+            <span className="flex h-16 w-16 items-center justify-center rounded-full bg-white text-champagne-dark shadow-card transition-transform duration-500 hover:-translate-y-1 hover:shadow-glow">
               <Icon width={26} height={26} />
             </span>
             <h3 className="font-display text-lg text-brown-dark">{title}</h3>
             <p className="text-sm text-brown-light">{text}</p>
-          </div>
+          </Reveal>
         ))}
       </div>
     </div>

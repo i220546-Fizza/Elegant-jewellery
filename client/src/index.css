@@ -57,6 +57,42 @@ body {
     @apply relative overflow-hidden bg-beige/70 bg-[length:200%_100%] animate-shimmer;
     background-image: linear-gradient(90deg, #f0e4cf 25%, #f8efdd 37%, #f0e4cf 63%);
   }
+
+  /* Glassmorphism surfaces for the navbar, drawer and showcase panels */
+  .glass {
+    @apply bg-white/60 backdrop-blur-xl border border-white/40;
+  }
+
+  .glass-nav {
+    @apply bg-ivory/75 backdrop-blur-xl border-b border-champagne/20;
+  }
+
+  .gold-line {
+    @apply relative after:absolute after:-bottom-1 after:left-0 after:h-px after:w-0 after:bg-gold after:transition-all after:duration-500 after:ease-lux hover:after:w-full;
+  }
+
+  .perspective-container {
+    perspective: 1500px;
+  }
+
+  .preserve-3d {
+    transform-style: preserve-3d;
+  }
+
+  .badge-luxe {
+    @apply rounded-full border border-champagne/40 bg-gradient-to-r from-gold-light/90 to-champagne-dark/90 px-3 py-1 text-[10px] font-medium uppercase tracking-widest text-white shadow-sm;
+  }
+}
+
+/* Respect the user's motion preference: strip decorative motion, keep functional transitions */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+  }
 }
 
 ::selection {

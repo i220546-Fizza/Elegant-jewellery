@@ -10,6 +10,9 @@ interface CartContextValue {
   clearCart: () => void;
   subtotal: number;
   itemCount: number;
+  isDrawerOpen: boolean;
+  openDrawer: () => void;
+  closeDrawer: () => void;
 }
 
 const CartContext = createContext<CartContextValue | undefined>(undefined);
@@ -26,6 +29,7 @@ const loadCart = (): CartItem[] => {
 
 export const CartProvider = ({ children }: { children: ReactNode }) => {
   const [items, setItems] = useState<CartItem[]>(loadCart);
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
 
   useEffect(() => {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
@@ -71,13 +75,26 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
   }, []);
 
   const clearCart = useCallback(() => setItems([]), []);
+  const openDrawer = useCallback(() => setIsDrawerOpen(true), []);
+  const closeDrawer = useCallback(() => setIsDrawerOpen(false), []);
 
   const subtotal = useMemo(() => items.reduce((sum, i) => sum + i.price * i.quantity, 0), [items]);
   const itemCount = useMemo(() => items.reduce((sum, i) => sum + i.quantity, 0), [items]);
 
   const value = useMemo(
-    () => ({ items, addToCart, removeFromCart, updateQuantity, clearCart, subtotal, itemCount }),
-    [items, addToCart, removeFromCart, updateQuantity, clearCart, subtotal, itemCount]
+    () => ({
+      items,
+      addToCart,
+      removeFromCart,
+      updateQuantity,
+      clearCart,
+      subtotal,
+      itemCount,
+      isDrawerOpen,
+      openDrawer,
+      closeDrawer,
+    }),
+    [items, addToCart, removeFromCart, updateQuantity, clearCart, subtotal, itemCount, isDrawerOpen, openDrawer, closeDrawer]
   );
 
   return <CartContext.Provider value={value}>{children}</CartContext.Provider>;

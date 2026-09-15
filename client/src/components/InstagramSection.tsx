@@ -1,4 +1,5 @@
 import { InstagramIcon } from './Icons';
+import Reveal from './Reveal';
 
 const HANDLE = '@elegantjewellery';
 const IMAGES = ['i2', 'i7', 'i12', 'i16', 'i4', 'i9'];
@@ -6,9 +7,11 @@ const IMAGES = ['i2', 'i7', 'i12', 'i16', 'i4', 'i9'];
 const InstagramSection = () => (
   <section className="bg-cream py-20">
     <div className="container-luxe text-center">
-      <p className="section-kicker">Follow Along</p>
-      <h2 className="section-heading mt-3">{HANDLE} on Instagram</h2>
-      <div className="mt-10 grid grid-cols-3 gap-3 sm:grid-cols-6">
+      <Reveal>
+        <p className="section-kicker">Follow Along</p>
+        <h2 className="section-heading mt-3">{HANDLE} on Instagram</h2>
+      </Reveal>
+      <Reveal delay={0.1} className="mt-10 grid grid-cols-3 gap-3 sm:grid-cols-6">
         {IMAGES.map((id) => (
           <a
             key={id}
@@ -26,7 +29,7 @@ const InstagramSection = () => (
             </span>
           </a>
         ))}
-      </div>
+      </Reveal>
     </div>
   </section>
 );
