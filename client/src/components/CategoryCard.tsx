@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import useTilt from '../hooks/useTilt';
@@ -6,10 +7,12 @@ interface Props {
   name: string;
   category: string;
   image: string;
+  fallbackImage?: string;
 }
 
-const CategoryCard = ({ name, category, image }: Props) => {
+const CategoryCard = ({ name, category, image, fallbackImage }: Props) => {
   const tilt = useTilt({ max: 9, scale: 1.03 });
+  const [src, setSrc] = useState(image);
 
   return (
     <motion.div
@@ -26,7 +29,10 @@ const CategoryCard = ({ name, category, image }: Props) => {
     >
       <Link to={`/shop?category=${category}`} className="absolute inset-0 flex flex-col justify-end">
         <img
-          src={image}
+          src={src}
+          onError={() => {
+            if (fallbackImage && src !== fallbackImage) setSrc(fallbackImage);
+          }}
           alt={`${name} collection`}
           loading="lazy"
           className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 ease-lux group-hover:scale-[1.15]"

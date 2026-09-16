@@ -18,11 +18,14 @@ import QuickViewModal from '../components/QuickViewModal';
 import Reveal from '../components/Reveal';
 import { ChevronRightIcon } from '../components/Icons';
 
+// Drop your own photos at client/public/images/category-*.jpg (any size,
+// portrait or square works well) to replace these - each is tried first and
+// falls back to the generated placeholder automatically if it's not there.
 const CATEGORIES = [
-  { name: 'Rings', category: 'rings', image: '/uploads/products/i2.svg' },
-  { name: 'Necklaces', category: 'necklaces', image: '/uploads/products/i8.svg' },
-  { name: 'Earrings', category: 'earrings', image: '/uploads/products/i15.svg' },
-  { name: 'Bracelets', category: 'bracelets', image: '/uploads/products/i16.svg' },
+  { name: 'Rings', category: 'rings', image: '/images/category-rings.jpg', fallbackImage: '/uploads/products/i2.svg' },
+  { name: 'Necklaces', category: 'necklaces', image: '/images/category-necklaces.jpg', fallbackImage: '/uploads/products/i8.svg' },
+  { name: 'Earrings', category: 'earrings', image: '/images/category-earrings.jpg', fallbackImage: '/uploads/products/i15.svg' },
+  { name: 'Bracelets', category: 'bracelets', image: '/images/category-bracelets.jpg', fallbackImage: '/uploads/products/i16.svg' },
 ];
 
 const Home = () => {

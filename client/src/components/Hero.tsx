@@ -1,6 +1,12 @@
-import { useRef } from 'react';
+import { useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { motion, useMotionValue, useSpring, useTransform, useReducedMotion } from 'framer-motion';
+
+// Drop your own photo at client/public/images/hero-banner.jpg (any size, wide
+// works best) to replace this - it's tried first and falls back to the
+// generated placeholder automatically if it's not there.
+const HERO_IMAGE = '/images/hero-banner.jpg';
+const HERO_IMAGE_FALLBACK = '/images/hero-banner.svg';
 
 const PARTICLES = Array.from({ length: 10 }, (_, i) => ({
   id: i,
@@ -14,6 +20,7 @@ const PARTICLES = Array.from({ length: 10 }, (_, i) => ({
 const Hero = () => {
   const stageRef = useRef<HTMLDivElement>(null);
   const prefersReducedMotion = useReducedMotion();
+  const [heroSrc, setHeroSrc] = useState(HERO_IMAGE);
 
   const mvX = useMotionValue(0);
   const mvY = useMotionValue(0);
@@ -109,11 +116,16 @@ const Hero = () => {
 
             {/* main hero piece */}
             <div className="absolute inset-0 flex items-center justify-center">
-              <img
-                src="/images/hero-banner.svg"
-                alt="Elegant Jewellery showcase"
-                className="w-[85%] rounded-[2rem] shadow-lux animate-float"
-              />
+              <div className="aspect-square w-[85%] animate-float overflow-hidden rounded-[2rem] shadow-lux">
+                <img
+                  src={heroSrc}
+                  onError={() => {
+                    if (heroSrc !== HERO_IMAGE_FALLBACK) setHeroSrc(HERO_IMAGE_FALLBACK);
+                  }}
+                  alt="Elegant Jewellery showcase"
+                  className="h-full w-full object-cover"
+                />
+              </div>
             </div>
 
             {/* floating satellite pieces for depth/parallax - hidden below sm to keep the mobile hero uncluttered */}
