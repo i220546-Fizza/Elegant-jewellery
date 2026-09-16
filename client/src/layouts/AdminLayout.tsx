@@ -1,7 +1,8 @@
-import { NavLink, Outlet, Link } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import { NavLink, Outlet, Link, useLocation } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import { useAuth } from '../context/AuthContext';
-import { BagIcon, ChevronRightIcon, GiftIcon, UserIcon } from '../components/Icons';
+import { BagIcon, ChevronRightIcon, CloseIcon, GiftIcon, MenuIcon, UserIcon } from '../components/Icons';
 
 const LINKS = [
   { label: 'Dashboard', to: '/admin', icon: ChevronRightIcon, end: true },
@@ -11,6 +12,12 @@ const LINKS = [
 
 const AdminLayout = () => {
   const { user, logout } = useAuth();
+  const [mobileOpen, setMobileOpen] = useState(false);
+  const { pathname } = useLocation();
+
+  useEffect(() => {
+    setMobileOpen(false);
+  }, [pathname]);
 
   return (
     <div className="flex min-h-screen bg-cream">
@@ -51,13 +58,45 @@ const AdminLayout = () => {
       </aside>
 
       <div className="flex-1">
-        <header className="flex items-center justify-between border-b border-brown-dark/10 bg-ivory px-6 py-4 lg:hidden">
-          <Link to="/admin" className="font-display text-lg text-brown-dark">
-            Elegant Admin
-          </Link>
-          <button onClick={logout} className="text-xs uppercase tracking-widest text-champagne-dark">
-            Sign Out
-          </button>
+        <header className="border-b border-brown-dark/10 bg-ivory lg:hidden">
+          <div className="flex items-center justify-between px-6 py-4">
+            <button
+              aria-label="Toggle admin menu"
+              onClick={() => setMobileOpen((v) => !v)}
+              className="text-brown-dark"
+            >
+              {mobileOpen ? <CloseIcon /> : <MenuIcon />}
+            </button>
+            <Link to="/admin" className="font-display text-lg text-brown-dark">
+              Elegant Admin
+            </Link>
+            <button onClick={logout} className="text-xs uppercase tracking-widest text-champagne-dark">
+              Sign Out
+            </button>
+          </div>
+
+          {mobileOpen && (
+            <nav className="flex flex-col border-t border-brown-dark/10 bg-ivory px-6 py-4">
+              {LINKS.map(({ label, to, icon: Icon, end }) => (
+                <NavLink
+                  key={label}
+                  to={to}
+                  end={end}
+                  className={({ isActive }) =>
+                    `flex items-center gap-3 border-b border-brown-dark/5 py-3 text-sm ${
+                      isActive ? 'text-champagne-dark' : 'text-brown-dark'
+                    }`
+                  }
+                >
+                  <Icon width={17} height={17} />
+                  {label}
+                </NavLink>
+              ))}
+              <Link to="/" className="pt-3 text-xs uppercase tracking-widest text-champagne-dark">
+                &larr; Back to Store
+              </Link>
+            </nav>
+          )}
         </header>
         <main className="p-6 sm:p-8">
           <Outlet />
