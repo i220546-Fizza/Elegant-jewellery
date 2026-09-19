@@ -61,8 +61,7 @@ const Footer = () => (
           <li><Link to="/privacy" className="gold-line hover:text-champagne-dark">Privacy Policy</Link></li>
         </ul>
         <div className="mt-6 space-y-2 text-sm text-brown-light">
-          <p>hello@elegantjewellery.com</p>
-          <p>+92 300 1234567</p>
+          <p>elegantjewellery84@gmail.com</p>
         </div>
       </div>
     </div>

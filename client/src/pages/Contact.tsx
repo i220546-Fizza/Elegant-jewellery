@@ -95,8 +95,7 @@ const Contact = () => {
           <div>
             <h3 className="font-display text-xl text-brown-dark">Contact Information</h3>
             <ul className="mt-4 space-y-2 text-sm text-brown-light">
-              <li>Email: hello@elegantjewellery.com</li>
-              <li>Phone: +92 300 1234567</li>
+              <li>Email: elegantjewellery84@gmail.com</li>
               <li>Location: Gulberg III, Lahore, Pakistan</li>
               <li>Hours: Mon - Sat, 10am - 8pm</li>
             </ul>
