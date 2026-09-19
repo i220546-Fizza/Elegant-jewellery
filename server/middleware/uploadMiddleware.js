@@ -2,17 +2,6 @@ const path = require('path');
 const fs = require('fs');
 const multer = require('multer');
 
-const uploadDir = path.join(__dirname, '..', 'uploads', 'products');
-fs.mkdirSync(uploadDir, { recursive: true });
-
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => cb(null, uploadDir),
-  filename: (req, file, cb) => {
-    const unique = `${Date.now()}-${Math.round(Math.random() * 1e9)}`;
-    cb(null, `${unique}${path.extname(file.originalname).toLowerCase()}`);
-  },
-});
-
 const allowedTypes = /jpe?g|png|webp|gif|svg/;
 
 const fileFilter = (req, file, cb) => {
@@ -24,6 +13,29 @@ const fileFilter = (req, file, cb) => {
     cb(new Error('Only image files (jpg, png, webp, gif, svg) are allowed'));
   }
 };
+
+// When Cloudinary credentials are configured, uploads are streamed straight to
+// Cloudinary (see uploadController.js) so they survive host restarts/redeploys -
+// keep files in memory rather than writing them to local disk first. Without
+// Cloudinary configured (e.g. local dev with nothing set up), fall back to
+// saving on local disk exactly as before, so `npm run dev` keeps working with
+// zero extra setup.
+const useCloudinary = Boolean(process.env.CLOUDINARY_CLOUD_NAME);
+
+let storage;
+if (useCloudinary) {
+  storage = multer.memoryStorage();
+} else {
+  const uploadDir = path.join(__dirname, '..', 'uploads', 'products');
+  fs.mkdirSync(uploadDir, { recursive: true });
+  storage = multer.diskStorage({
+    destination: (req, file, cb) => cb(null, uploadDir),
+    filename: (req, file, cb) => {
+      const unique = `${Date.now()}-${Math.round(Math.random() * 1e9)}`;
+      cb(null, `${unique}${path.extname(file.originalname).toLowerCase()}`);
+    },
+  });
+}
 
 const upload = multer({
   storage,
