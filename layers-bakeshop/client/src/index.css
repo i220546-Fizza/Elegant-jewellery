@@ -1,0 +1,173 @@
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;0,9..144,500;0,9..144,600;0,9..144,700;1,9..144,400;1,9..144,500&family=Inter:wght@300;400;500;600;700&display=swap');
+@import "tailwindcss";
+
+/*
+ * Layers Bakeshop design tokens.
+ * layers.pk could not be inspected directly (network egress to that domain is
+ * blocked in this environment), so this is an original palette built to match
+ * the brand's documented premium-dessert feel: deep burgundy + warm gold on a
+ * soft cream ground, rather than a scraped/copied value set. Centralized here
+ * so every surface (nav, cart, checkout, admin, 3D scene) draws from the same
+ * source of truth.
+ */
+:root {
+  --layers-primary: #6e1e2c;       /* burgundy — CTAs, brand marks */
+  --layers-primary-hover: #591723; /* burgundy hover/active */
+  --layers-primary-light: #8c3341; /* tints, gradients */
+  --layers-ink: #2b1b14;           /* espresso — primary text */
+  --layers-ink-soft: #5a4a3f;      /* secondary text */
+  --layers-muted: #8a7a6d;         /* tertiary text, placeholders */
+  --layers-background: #fbf7f1;    /* page background — warm cream */
+  --layers-surface: #ffffff;       /* cards, panels */
+  --layers-surface-alt: #f4ecdf;   /* alternate section background */
+  --layers-accent: #c9a24b;        /* gold — accents, icons, borders */
+  --layers-accent-soft: #ecdcb2;   /* light gold — subtle fills */
+  --layers-accent-hover: #b38a36;  /* gold hover */
+  --layers-border: #e7ddd0;        /* card/section borders */
+  --layers-success: #4c7a5b;
+  --layers-warning: #c67c2e;
+  --layers-error: #b3372c;
+  --layers-overlay: rgba(43, 27, 20, 0.6);
+
+  --font-display: 'Fraunces', 'Georgia', serif;
+  --font-body: 'Inter', system-ui, sans-serif;
+}
+
+@theme inline {
+  --color-layers-primary: var(--layers-primary);
+  --color-layers-primary-hover: var(--layers-primary-hover);
+  --color-layers-primary-light: var(--layers-primary-light);
+  --color-layers-ink: var(--layers-ink);
+  --color-layers-ink-soft: var(--layers-ink-soft);
+  --color-layers-muted: var(--layers-muted);
+  --color-layers-background: var(--layers-background);
+  --color-layers-surface: var(--layers-surface);
+  --color-layers-surface-alt: var(--layers-surface-alt);
+  --color-layers-accent: var(--layers-accent);
+  --color-layers-accent-soft: var(--layers-accent-soft);
+  --color-layers-accent-hover: var(--layers-accent-hover);
+  --color-layers-border: var(--layers-border);
+  --color-layers-success: var(--layers-success);
+  --color-layers-warning: var(--layers-warning);
+  --color-layers-error: var(--layers-error);
+
+  --font-family-display: var(--font-display);
+  --font-family-body: var(--font-body);
+
+  --animate-float: float 6s ease-in-out infinite;
+  --animate-drift: drift 18s linear infinite;
+  --animate-shimmer: shimmer 2.4s linear infinite;
+}
+
+@layer base {
+  * {
+    border-color: var(--layers-border);
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    background-color: var(--layers-background);
+    color: var(--layers-ink);
+    font-family: var(--font-body);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-display);
+    letter-spacing: -0.01em;
+  }
+
+  ::selection {
+    background-color: var(--layers-accent-soft);
+    color: var(--layers-ink);
+  }
+
+  ::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+  ::-webkit-scrollbar-track {
+    background: var(--layers-background);
+  }
+  ::-webkit-scrollbar-thumb {
+    background: var(--layers-accent-soft);
+    border-radius: 999px;
+    border: 2px solid var(--layers-background);
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: var(--layers-accent);
+  }
+
+  a, button {
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--layers-primary);
+    outline-offset: 2px;
+  }
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+
+  .layers-heading {
+    font-family: var(--font-display);
+  }
+
+  .layers-eyebrow {
+    font-family: var(--font-body);
+    letter-spacing: 0.28em;
+    text-transform: uppercase;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--layers-accent-hover);
+  }
+
+  .grain-overlay {
+    position: relative;
+  }
+  .grain-overlay::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    opacity: 0.035;
+    mix-blend-mode: multiply;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0px) rotate(0deg); }
+  50% { transform: translateY(-14px) rotate(2deg); }
+}
+
+@keyframes drift {
+  0% { transform: translate3d(0, 0, 0) rotate(0deg); }
+  100% { transform: translate3d(0, -120px, 0) rotate(360deg); }
+}
+
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+html.no-cursor,
+html.no-cursor * {
+  cursor: none !important;
+}
