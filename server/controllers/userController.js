@@ -17,7 +17,7 @@ const updateProfile = asyncHandler(async (req, res) => {
 // @route   PUT /api/users/password   body: { currentPassword, newPassword }
 const changePassword = asyncHandler(async (req, res) => {
   const { currentPassword, newPassword } = req.body;
-  const user = await User.findById(req.user._id).select('+password');
+  const user = await User.findById(req.user._id).select('+password +tokenVersion');
   if (!currentPassword || !(await user.matchPassword(currentPassword))) {
     res.status(400);
     throw new Error('Your current password is incorrect');
@@ -26,7 +26,7 @@ const changePassword = asyncHandler(async (req, res) => {
   user.password = newPassword;
   await user.save();
   // Issue a fresh cookie - tokens issued before the change are now invalid.
-  sendAuthCookie(res, user._id);
+  sendAuthCookie(res, user);
   res.json({ success: true, message: 'Password updated' });
 });
 

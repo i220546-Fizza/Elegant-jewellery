@@ -1,7 +1,7 @@
 const jwt = require('jsonwebtoken');
 
-const generateToken = (id) =>
-  jwt.sign({ id }, process.env.JWT_SECRET, {
+const generateToken = (id, version = 0) =>
+  jwt.sign({ id, v: version }, process.env.JWT_SECRET, {
     expiresIn: process.env.JWT_EXPIRES_IN || '7d',
   });
 
@@ -16,8 +16,9 @@ const cookieOptions = () => ({
   path: '/',
 });
 
-const sendAuthCookie = (res, userId) => {
-  res.cookie('token', generateToken(userId), { ...cookieOptions(), maxAge: COOKIE_MAX_AGE });
+// `user` must have tokenVersion loaded (it is select: false on the model).
+const sendAuthCookie = (res, user) => {
+  res.cookie('token', generateToken(user._id, user.tokenVersion || 0), { ...cookieOptions(), maxAge: COOKIE_MAX_AGE });
 };
 
 const clearAuthCookie = (res) => {

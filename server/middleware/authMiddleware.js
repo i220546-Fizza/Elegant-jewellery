@@ -11,9 +11,10 @@ const extractToken = (req) => {
 
 const resolveUser = async (token) => {
   const decoded = jwt.verify(token, process.env.JWT_SECRET);
-  const user = await User.findById(decoded.id).select('+passwordChangedAt');
+  const user = await User.findById(decoded.id).select('+tokenVersion');
   if (!user || !user.isActive) return null;
-  if (user.changedPasswordAfter(decoded.iat)) return null;
+  // Sessions issued before the latest password change are no longer valid.
+  if ((decoded.v || 0) !== (user.tokenVersion || 0)) return null;
   return user;
 };
 

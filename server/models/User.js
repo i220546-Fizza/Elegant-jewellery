@@ -29,7 +29,8 @@ const userSchema = new mongoose.Schema(
     addresses: { type: [addressSchema], default: [] },
     isActive: { type: Boolean, default: true },
     newsletter: { type: Boolean, default: false },
-    passwordChangedAt: { type: Date, select: false },
+    // Bumped on every password change; tokens carrying an older version are rejected.
+    tokenVersion: { type: Number, default: 0, select: false },
     resetPasswordToken: { type: String, select: false },
     resetPasswordExpire: { type: Date, select: false },
     lastLoginAt: { type: Date },
@@ -41,18 +42,12 @@ userSchema.pre('save', async function hashPassword(next) {
   if (!this.isModified('password')) return next();
   const salt = await bcrypt.genSalt(12);
   this.password = await bcrypt.hash(this.password, salt);
-  if (!this.isNew) this.passwordChangedAt = new Date(Date.now() - 1000);
+  if (!this.isNew) this.tokenVersion = (this.tokenVersion || 0) + 1;
   next();
 });
 
 userSchema.methods.matchPassword = function matchPassword(enteredPassword) {
   return bcrypt.compare(enteredPassword, this.password);
-};
-
-// A token issued before the last password change is no longer valid.
-userSchema.methods.changedPasswordAfter = function changedPasswordAfter(jwtIssuedAt) {
-  if (!this.passwordChangedAt) return false;
-  return Math.floor(this.passwordChangedAt.getTime() / 1000) > jwtIssuedAt;
 };
 
 userSchema.methods.toPublic = function toPublic() {

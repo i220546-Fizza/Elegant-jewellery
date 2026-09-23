@@ -31,7 +31,7 @@ const registerUser = asyncHandler(async (req, res) => {
   }
 
   const user = await User.create({ name, email, password, newsletter: !!newsletter });
-  sendAuthCookie(res, user._id);
+  sendAuthCookie(res, user);
   res.status(201).json({ success: true, user: user.toPublic() });
 });
 
@@ -44,7 +44,7 @@ const loginUser = asyncHandler(async (req, res) => {
     throw new Error('Please provide your email and password');
   }
 
-  const user = await User.findOne({ email: String(email).toLowerCase() }).select('+password');
+  const user = await User.findOne({ email: String(email).toLowerCase() }).select('+password +tokenVersion');
   if (!user || !(await user.matchPassword(password))) {
     res.status(401);
     throw new Error('Invalid email or password');
@@ -57,7 +57,7 @@ const loginUser = asyncHandler(async (req, res) => {
   user.lastLoginAt = new Date();
   await user.save({ validateBeforeSave: false });
 
-  sendAuthCookie(res, user._id);
+  sendAuthCookie(res, user);
   res.json({ success: true, user: user.toPublic() });
 });
 
@@ -114,7 +114,7 @@ const resetPassword = asyncHandler(async (req, res) => {
   const user = await User.findOne({
     resetPasswordToken: hashedToken,
     resetPasswordExpire: { $gt: Date.now() },
-  }).select('+password');
+  }).select('+password +tokenVersion');
 
   if (!user) {
     res.status(400);
@@ -127,7 +127,7 @@ const resetPassword = asyncHandler(async (req, res) => {
   user.resetPasswordExpire = undefined;
   await user.save();
 
-  sendAuthCookie(res, user._id);
+  sendAuthCookie(res, user);
   res.json({ success: true, user: user.toPublic() });
 });
 
