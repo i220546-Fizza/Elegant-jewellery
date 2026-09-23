@@ -40,7 +40,7 @@ const Orders = () => {
               <div className="flex-1">
                 <p className="font-sans text-sm tracking-wide">{o.orderNumber}</p>
                 <p className="mt-1 text-xs text-stone">
-                  {formatDate(o.createdAt)} · {o.orderItems.reduce((s, i) => s + i.quantity, 0)} items · {o.paymentMethod}
+                  {formatDate(o.createdAt)} · {(() => { const n = o.orderItems.reduce((s, i) => s + i.quantity, 0); return `${n} ${n === 1 ? 'item' : 'items'}`; })()} · {o.paymentMethod}
                 </p>
               </div>
               <StatusBadge status={o.status} />

@@ -1,153 +1,154 @@
-# Elegant Jewellery
+# NB Classic Scents
 
-A full-stack, production-quality e-commerce website for **Elegant Jewellery** — a premium, minimal, feminine jewellery brand. Built with React + TypeScript + Vite + Tailwind CSS on the frontend and Node.js + Express + MongoDB (Mongoose) on the backend.
+A full-stack luxury fragrance e-commerce site for **NB Classic Scents**: an editorial storefront with a cinematic 3D perfume showroom, real customer accounts, a cart, checkout and orders, and a complete admin back office.
 
-> This repository was empty when this build started (no prior commits, no product images). Since no product photography existed and external image hosts are blocked by this environment's network policy, all product/hero imagery was generated as original, cohesive line-art SVG artwork in the brand's champagne-gold palette (see **Product Images** below). Everything else — auth, cart, checkout, orders, reviews, wishlist, admin panel — is fully wired to a real MongoDB database, not mocked.
-
-## Design System (3D Luxury Redesign)
-
-The storefront was redesigned around a "luxury showroom" feel using **Framer Motion** plus native CSS 3D transforms — no Three.js/WebGL, so it stays fast and lightweight:
-
-- `src/hooks/useTilt.ts` — spring-driven 3D tilt-on-hover for product/category cards (`perspective` + `rotateX/rotateY`), no-ops under `prefers-reduced-motion`.
-- `src/components/Reveal.tsx` — scroll-triggered fade/slide-up wrapper (`whileInView`) used across every homepage section for the "fashion site" scroll feel.
-- `src/components/Hero.tsx` — mouse-parallax floating jewellery pieces, ambient glow blobs, gold particles, all disabled under reduced motion.
-- `src/components/CartDrawer.tsx` — glassmorphism slide-in bag, opened from the navbar cart icon (`CartContext.isDrawerOpen`), with Escape-to-close and scroll lock.
-- `src/components/FeaturedCollection.tsx` / `BrandStory.tsx` / `InteractiveShowcase.tsx` — new homepage sections (asymmetric bento grid, split-layout scroll parallax, glass "display case" spotlight).
-- Admin panel intentionally stays plain/professional (no 3D effects), and is code-split via `React.lazy` so customers never download that bundle.
-- `@media (prefers-reduced-motion: reduce)` in `index.css` strips CSS keyframe animations globally; Framer Motion components separately check `useReducedMotion()`.
-- Verified with Playwright at 1440px and 390px viewports: no horizontal overflow on any page, no console/runtime errors.
+**Stack:** React 18 · TypeScript · Vite · Tailwind CSS · Three.js · React Three Fiber · Drei · Framer Motion on the front end; Node.js · Express · MongoDB · Mongoose · JWT (httpOnly cookie) · bcrypt on the back end.
 
 ---
 
-## 1. Project Structure
+## Quick start
 
-```
-Elegant-jewellery/
-├── client/                      # React + TypeScript + Vite + Tailwind frontend
-│   ├── public/images/           # Hero banner, about page art, logo mark (SVG)
-│   └── src/
-│       ├── components/          # Navbar, Footer, ProductCard, ProductGrid, OrderTable, etc.
-│       ├── context/              # AuthContext, CartContext, WishlistContext
-│       ├── layouts/              # MainLayout (storefront), AdminLayout (dashboard)
-│       ├── pages/                 # Home, Shop, ProductDetails, Cart, Checkout, ...
-│       │   └── admin/            # AdminDashboard, AdminProducts, AdminOrders, ...
-│       ├── services/             # axios API clients (auth, products, orders, admin, users)
-│       ├── types/                # Shared TypeScript interfaces
-│       └── utils/                # formatCurrency, formatDate, etc.
-│
-├── server/                      # Node.js + Express + MongoDB backend
-│   ├── config/db.js              # Mongoose connection
-│   ├── models/                   # User, Product, Order (Mongoose schemas)
-│   ├── controllers/              # Business logic per resource
-│   ├── routes/                   # Express routers
-│   ├── middleware/                # JWT auth, admin guard, multer upload, error handler
-│   ├── seed/seedProducts.js      # Seeds 20 products + creates the first admin account
-│   └── uploads/products/         # Generated SVG product images + admin-uploaded images
-│
-└── README.md
-```
+Requirements: Node 18+ and a MongoDB database (local `mongod` or MongoDB Atlas).
 
-## 2. What Was Built
-
-**Backend (`server/`)**
-- `config/db.js` — Mongoose/MongoDB connection with clear failure messages.
-- `models/User.js` — name, email, hashed password (bcrypt), role (`customer`/`admin`), address, wishlist.
-- `models/Product.js` — name, slug, description, price, category, material, images, sizes, stock, `featured`, `bestseller`, `isNewArrival`, embedded reviews, text search index.
-- `models/Order.js` — order items, customer info, shipping address, payment method, status (`Pending → Confirmed → Processing → Shipped → Delivered`, or `Cancelled`), totals.
-- `middleware/authMiddleware.js` — JWT verification (`protect`) and admin authorization (`admin`).
-- `middleware/uploadMiddleware.js` — Multer image upload with type/size validation.
-- `middleware/errorMiddleware.js` — centralized error handling (validation errors, duplicate keys, cast errors, 404s).
-- `controllers/` + `routes/` for **auth**, **products**, **orders**, **users** (profile/wishlist), **uploads**, and **admin** (dashboard stats).
-- `seed/seedProducts.js` — seeds 20 real products across all 4 categories and creates/promotes an admin account from `.env`.
-
-**Frontend (`client/`)**
-- Luxury design system in `tailwind.config.js` (ivory/cream/beige/champagne-gold/brown palette, Playfair Display + Cormorant Garamond + Inter typography, soft shadows, subtle animations).
-- `context/AuthContext.tsx`, `CartContext.tsx`, `WishlistContext.tsx` — global state backed by JWT + localStorage, synced to the backend when logged in.
-- Reusable components: `Navbar`, `Footer`, `ProductCard`, `ProductGrid`, `CategoryCard`, `QuickViewModal`, `QuantitySelector`, `StarRating`, `OrderTable`, `StatCard`, `SalesTrendChart`, `LoadingSpinner`, `EmptyState`, `ProtectedRoute`.
-- Storefront pages: `Home`, `Shop` (search/filter/sort/pagination), `ProductDetails` (gallery, sizes, reviews, related products), `Cart`, `Checkout` (Cash on Delivery), `OrderConfirmation`, `Login`, `Signup`, `ForgotPassword`/`ResetPassword`, `Profile` (order history + settings), `Wishlist`, `About`, `Contact` (form + FAQ).
-- Admin pages (`/admin`, protected + role-gated): `AdminDashboard` (stats, sales trend chart, low-stock alerts, recent orders), `AdminProducts` (list/delete), `AdminProductForm` (create/edit + image upload), `AdminOrders` (filter by status), `AdminOrderDetails` (change status).
-
-## 3. How the Frontend Works
-
-- **Vite + React + TypeScript**, routed with `react-router-dom` (`src/App.tsx`). `MainLayout` wraps all storefront pages with the `Navbar`/`Footer`/toast host; `AdminLayout` wraps the admin panel with a sidebar and is gated by `ProtectedRoute adminOnly`.
-- **State**: `AuthContext` holds the logged-in user and JWT (stored in `localStorage` as `ej_token`); `CartContext` persists the cart to `localStorage`; `WishlistContext` syncs to the backend for logged-in users and falls back to `localStorage` for guests.
-- **API calls** go through `src/services/*.ts`, which use a shared `axios` instance (`src/services/api.ts`) that automatically attaches the JWT and normalizes error messages.
-- **Dev proxy**: `vite.config.ts` proxies `/api` and `/uploads` to the backend (`http://localhost:5000` by default), so the frontend never needs a hardcoded backend URL in development.
-- **Styling**: Tailwind CSS utility classes plus a small set of `@layer components` (`btn-primary`, `btn-gold`, `card-luxe`, `input-luxe`, etc.) in `src/index.css` for consistent, reusable luxury UI patterns.
-
-## 4. How the Backend Works
-
-- **Express** app in `server/server.js`: security-conscious CORS (only `CLIENT_URL` origins allowed), JSON body parsing, request logging in development, static serving of `/uploads`, and centralized error handling.
-- **Auth**: `POST /api/auth/register` and `/login` issue JWTs (`utils/generateToken.js`); `GET /api/auth/me` returns the current user via the `protect` middleware. Passwords are hashed with bcrypt before saving (`models/User.js` pre-save hook) and never returned in API responses.
-- **Products**: `GET /api/products` supports `search`, `category`, `minPrice`/`maxPrice`, `sort` (`newest`, `price-asc`, `price-desc`, `rating`, `name-asc`), `featured`, `bestseller`, and pagination. Admin-only routes create/update/delete products and manage stock; any logged-in user can post a review.
-- **Orders**: `POST /api/orders` works for both guests and logged-in customers, verifies stock/price server-side against the database (never trusts the client), decrements stock, and computes shipping (free over Rs. 15,000). Customers can view `GET /api/orders/my-orders`; admins can view/filter all orders and update status via `PUT /api/orders/:id/status`.
-- **Uploads**: `POST /api/uploads` (admin-only) accepts up to 6 images via Multer and returns their public `/uploads/...` paths for use in the product form.
-- **Admin stats**: `GET /api/admin/stats` aggregates total orders/sales/products/customers, low-stock products, recent orders, order status breakdown, and a 14-day sales trend.
-
-## 5. How MongoDB Is Connected
-
-1. Copy `server/.env.example` to `server/.env` and set `MONGO_URI` to either:
-   - A local MongoDB instance: `mongodb://127.0.0.1:27017/elegant-jewellery`, or
-   - A free [MongoDB Atlas](https://www.mongodb.com/atlas) cluster connection string.
-2. `server/config/db.js` connects via Mongoose when the server starts (`connectDB()` in `server.js`) and exits with a clear error if `MONGO_URI` is missing or unreachable.
-3. All models (`User`, `Product`, `Order`) live in `server/models/` and are used exclusively by the backend — **the frontend never talks to MongoDB directly**, only through the REST API, and credentials stay server-side in `.env` (which is git-ignored).
-
-> Note: this sandboxed build environment has no local `mongod` and no network access to download one, so the database layer couldn't be exercised end-to-end here. The Express server itself was verified to boot correctly and serve requests (health check, 404/error handling, CORS) — connect it to a real MongoDB instance as described above to use the full app.
-
-## 6. Running the Project
-
-**Backend**
 ```bash
+# 1. API
 cd server
-cp .env.example .env      # then edit MONGO_URI, JWT_SECRET, ADMIN_EMAIL/PASSWORD
+cp .env.example .env          # set MONGO_URI, JWT_SECRET and ADMIN_EMAIL / ADMIN_PASSWORD
 npm install
-npm run seed               # seeds 20 products + creates the first admin account
-npm run dev                 # starts the API on http://localhost:5000
-```
+npm run seed                  # catalogue, categories, discount codes, admin account
+# or: npm run seed:demo       # the same, plus sample customers, orders and reviews for the dashboard
+npm run dev                   # http://localhost:5000
 
-**Frontend** (in a separate terminal)
-```bash
+# 2. Storefront (second terminal)
 cd client
 npm install
-npm run dev                 # starts the app on http://localhost:5173
+npm run dev                   # http://localhost:5173  (proxies /api and /uploads to :5000)
 ```
 
-Open `http://localhost:5173` — the Vite dev server proxies `/api` and `/uploads` to the backend automatically.
+Sign in at `/login` with the `ADMIN_EMAIL` / `ADMIN_PASSWORD` from `.env`, then open `/admin`. **Change the default admin password before deploying.**
 
-**Production build**
+Demo discount codes (seeded): `WELCOME10`, `SIGNATURE15` (orders over PKR 25,000), `GIFT1000`.
+
+### Production (single origin)
+
 ```bash
-cd client && npm run build   # outputs static files to client/dist
-cd server && npm start       # serve the API (front it with your own static host/CDN or reverse proxy for client/dist)
+cd client && npm run build        # creates client/dist
+cd ../server && NODE_ENV=production npm start
 ```
 
-## 7. Creating/Logging In as Admin
+When `client/dist` exists, Express serves the storefront and the API from the same origin, so the auth cookie works with no CORS setup. Set `CLIENT_URL` to your public URL: it is used in password-reset and order-email links, and any *other* origin that calls the API must be listed there.
 
-Running `npm run seed` in `server/` automatically creates an admin account using `ADMIN_NAME`, `ADMIN_EMAIL`, and `ADMIN_PASSWORD` from your `.env` (defaults: `admin@elegantjewellery.com` / `ChangeMe123!` — **change these before deploying**). To log in:
+---
 
-1. Go to `http://localhost:5173/login` and sign in with the admin email/password.
-2. Navigate to `http://localhost:5173/admin` — the dashboard is protected by `ProtectedRoute adminOnly`, which checks `user.role === 'admin'` from the JWT-authenticated `/api/auth/me` response.
+## Brand & design system
 
-To promote an existing customer account to admin instead, either re-run the seed script with `ADMIN_EMAIL` set to that user's email (it promotes existing users), or update the `role` field to `"admin"` directly in the `users` collection.
+| Token | Hex | Use |
+|---|---|---|
+| `ink` | `#0D0E10` | Header text, footer, key typography, dark sections |
+| `ivory` | `#F8F7F3` | Primary background — the site stays bright |
+| `gold` | `#C9B27C` | Logo accents, rules, hover states, small highlights only |
+| `stone` | `#8D8A83` | Secondary text, metadata |
+| `taupe` | `#D8D0C2` | Product cards, editorial blocks, borders |
 
-## 8. Adding Products Through the Admin Panel
+- **Type:** Cormorant Garamond (serif — headings, product names, brand statements) and Jost (sans — navigation, buttons, prices, forms), with wide letter-spacing on uppercase labels.
+- **Logo:** framed `NB` monogram plus stacked "NB / CLASSIC SCENTS" (`components/ui/Logo.tsx`).
+- **Motion:** slow (0.8–1.5 s), eased `cubic-bezier(0.22, 1, 0.36, 1)` reveals, parallax and cross-fades. No bouncing or spinning, and everything respects `prefers-reduced-motion`.
 
-1. Sign in as an admin and go to **Admin → Products → Add Product**.
-2. Upload one or more images (stored under `server/uploads/products/` via `POST /api/uploads`), or reuse the generated placeholder art.
-3. Fill in name, category, material, price, stock, optional sizes (comma-separated), and the `Featured` / `Bestseller` / `New Arrival` flags.
-4. Submit — this calls `POST /api/products`, which validates the payload, generates a unique slug, and saves the product to MongoDB. It's immediately visible on the storefront (`Shop`, `Home`, category pages).
-5. Edit or delete any product from the **Admin → Products** table at any time; stock automatically decrements as real orders are placed.
+## The 3D showroom
 
-## 9. How Customers Place Orders
+Every bottle is built procedurally in `client/src/three/`, so each product has a real 3D presentation without needing any model files:
 
-1. Browse **Shop** (search, filter by category/price, sort, or toggle Featured/Bestseller) or a product's detail page, choose a size if applicable, and **Add to Cart** or **Buy Now**.
-2. On **Cart**, adjust quantities or remove items, then **Proceed to Checkout**.
-3. On **Checkout**, enter contact + shipping details and confirm **Cash on Delivery** as the payment method, then **Place Order**.
-4. `POST /api/orders` re-validates stock and pricing against MongoDB (never trusting client-submitted prices), creates the order, decrements stock, and returns the order.
-5. The customer is redirected to **Order Confirmation**, showing the order ID, items, totals, customer/delivery info, and an estimated delivery message.
-6. Logged-in customers can review all past orders under **My Account → Order History**; admins see and manage every order (including status updates) under **Admin → Orders**.
+- `shapes.ts` — five silhouettes (classic, tall, round, facet, flacon) with a thick glass base, a neck, a gold collar and a cap.
+- `PerfumeBottle.tsx` — physically based glass (transmission, IOR, attenuation), liquid tinted per product, champagne-gold / black-lacquer / ivory caps, and a foil label drawn on a canvas.
+- `Studio.tsx` — a studio environment built from light-formers (no HDR download), a key light that drifts with the cursor, and a soft contact shadow.
+- `BottleScene.tsx` — the cursor-follow rig (window-wide in the hero), drag-to-rotate (full 360° on product pages), scroll-linked positioning, a gentle float, and the champagne highlight ring used by *The Composition*.
 
-## 10. Product Images
+**Performance:** three.js is its own lazy chunk (`Bottle3D.tsx`). A studio-render poster shows instantly and cross-fades to the live scene. Rendering pauses when the canvas is off-screen, the pixel ratio drops when frames slow down, and phones and low-power devices get a lighter material path. If WebGL is unavailable, the poster stays.
 
-No product photography or `images/` folder existed in this repository, and this build environment's network policy blocks all external image hosts (Unsplash, picsum.photos, placehold.co, etc.) — so real photos or third-party stock imagery could not be used. Instead, `server/uploads/products/i1.svg` … `i20.svg` are original, hand-authored vector illustrations (rings, necklaces, earrings, bracelets) generated with a consistent champagne-gold, editorial-sketch style matching the brand palette, along with a hero banner, about-page illustration, and monogram logo in `client/public/images/`.
+**Custom models:** admins can upload a `.glb` / `.gltf` per product. It replaces the procedural bottle in every 3D view and is scaled to the same height automatically.
 
-To swap in real photography later: drop your own images into `server/uploads/products/` (or upload them through the admin panel), then either re-run `npm run seed` with updated image filenames in `server/seed/seedProducts.js`, or update each product's images via **Admin → Products → Edit**.
+**Product photography** in `server/uploads/products/*.webp` is rendered from the same 3D model:
+
+```bash
+cd client && npm run dev                                 # in one terminal
+NODE_PATH=$(npm root -g) npm run render:bottles [slug…]  # needs Playwright + Chromium
+```
+
+Admin-uploaded photos are used instead whenever a product has them.
+
+## What's included
+
+**Storefront** — cinematic hero · signature trio (Éclat / Essence / Noir) · shop grid by category · *The Composition* interactive notes · brand story · collections page · fragrance listing with category / family / price filters, search, sort and pagination · product page (3D viewer, gallery, sizes with per-size stock, quantity, add to bag, buy now, wishlist, description, top / heart / base notes, ingredients, longevity and sillage, shipping, reviews with rating breakdown, related fragrances) · quick view · search overlay · bag drawer · cart (quantities, remove, discount codes, subtotal, shipping, total) · checkout (contact, address, saved addresses, cash on delivery / card / online payment) · order confirmation · guest order tracking · contact, FAQ, shipping, returns, privacy and terms pages · loading, empty and error states throughout.
+
+**Accounts** — register, login, logout, forgot / reset password, profile, order history and order details (with self-cancel while pending), wishlist, saved addresses, change password. Guest bags and wishlists merge into the account on sign-in, and the bag is stored on the server so it follows the customer across devices.
+
+**Admin (`/admin`)** — analytics (revenue, orders, customers, average order, 7/30/90-day revenue trend, orders by status, bestsellers, revenue by payment method, inventory summary, recent orders) · products (create / edit / delete, sizes with price + stock + SKU, discount %, fragrance notes, categories, image upload, 3D model upload, bottle appearance with live 3D preview, visibility and merchandising flags) · categories · orders (search / filter, status updates with history, tracking number, payment status, customer details) · customers (spend and order history, deactivate, promote to admin, delete) · inventory (low-stock and sold-out views with inline restocking) · discount codes · contact messages.
+
+## Security
+
+- Passwords hashed with bcrypt (cost 12); at least 8 characters, including a letter and a number.
+- The JWT lives in an **httpOnly, SameSite=Lax** cookie (`Secure` in production), so page scripts cannot read it. Changing or resetting a password invalidates older sessions.
+- Rate limiting on auth, password reset, newsletter, contact and order lookup; a general API limit; `helmet` with a tailored Content Security Policy.
+- Prices, discounts, stock and totals are always recalculated on the server. Stock is reserved atomically per size, with rollback, so two buyers cannot take the last bottle.
+- Reset tokens are random, stored hashed, single-use and expire after 30 minutes.
+
+## Payments — please read
+
+- **Cash on Delivery** is fully functional. The order is marked paid when an admin sets it to *Delivered*.
+- **Card Payment** validates the card (Luhn check, expiry, CVC) and stores only the brand and last four digits, but **no payment gateway is connected, so no money is actually charged**. Before taking real card payments, replace `authorizeCard` in `server/utils/payments.js` with your processor (e.g. Stripe or PayFast) and send a tokenised card from the browser instead of raw digits.
+- **Online Payment** (bank transfer / JazzCash / Easypaisa) creates the order as *Awaiting Transfer*. Your team shares account details with the customer and marks the order *Paid* in the admin.
+
+## Email
+
+Set `SMTP_HOST`, `SMTP_USER` and `SMTP_PASS` to send password-reset and order-confirmation emails, and `STORE_EMAIL` to receive contact-form enquiries (they are always visible under **Admin → Messages** either way). Without SMTP, emails are printed to the server console and, outside production, the reset link is shown in the browser so the flow can still be tested.
+
+## Configuration
+
+`server/.env` — see `server/.env.example` for every option (`MONGO_URI`, `JWT_SECRET`, `CLIENT_URL`, admin seed credentials, shipping fee / free-shipping threshold, SMTP, Cloudinary).
+
+`client/.env` (optional) — `VITE_CONTACT_EMAIL`, `VITE_CONTACT_PHONE` (shown on the contact page), and `VITE_API_URL` if the API is hosted on a different origin.
+
+Uploads go to `server/uploads/` by default. On hosts with ephemeral disks (e.g. Render's free tier), set the `CLOUDINARY_*` variables so uploaded images and 3D models persist.
+
+`client/public/sitemap.xml` and `robots.txt` point at `https://elegant-jewllery.onrender.com` — update them when the site moves to its own domain.
+
+## API overview
+
+| Area | Endpoints |
+|---|---|
+| Auth | `POST /api/auth/register · login · logout · forgot-password`, `PUT /api/auth/reset-password/:token`, `GET /api/auth/me` |
+| Catalogue | `GET /api/products` (search, category, family, price, sort, page), `GET /api/products/meta`, `GET /api/products/:slug`, `GET /api/products/:id/related`, reviews `GET/POST/DELETE /api/products/:id/reviews`; admin `POST/PUT/DELETE /api/products`, `PATCH /api/products/:id/stock` |
+| Categories | `GET /api/categories`; admin `POST/PUT/DELETE` |
+| Cart | `POST /api/cart/quote` (guests), `GET/PUT /api/cart`, `POST /api/cart/merge` |
+| Wishlist | `GET /api/wishlist`, `POST /api/wishlist/:productId` (toggle), `POST /api/wishlist/merge` |
+| Account | `PUT /api/users/profile · password`, `GET/POST/PUT/DELETE /api/users/addresses` |
+| Orders | `POST /api/orders`, `GET /api/orders/my-orders`, `GET /api/orders/:id`, `GET /api/orders/lookup`, `PUT /api/orders/:id/cancel`; admin `GET /api/orders`, `PUT /api/orders/:id/status` |
+| Admin | `GET /api/admin/stats · inventory · customers`, `GET/PUT/DELETE /api/admin/customers/:id`, `/api/coupons`, `/api/contact`, `POST /api/uploads/images · model` |
+
+Models: `User`, `Product`, `Category`, `Order`, `Review`, `Wishlist`, `Cart`, `Coupon`, `Subscriber`, `ContactMessage`.
+
+## Tests
+
+```bash
+cd server && npm test        # integration tests against MONGO_TEST_URI (default: local mongod)
+cd client && npm run typecheck && npm run lint && npm run build
+```
+
+## Project structure
+
+```
+client/
+  scripts/render-bottles.mjs     studio renders of every bottle
+  src/three/                     procedural bottle, studio lighting, scene rig, GLB loader
+  src/components/{home,product,layout,account,ui}/
+  src/pages/                     storefront + account/ + info/
+  src/admin/                     back office (code-split from the storefront)
+  src/context/                   auth, cart (server-synced), wishlist, UI
+  src/services/                  typed API client
+server/
+  models/ controllers/ routes/ middleware/ utils/
+  seed/catalogue.js              16 fragrances, 7 categories, discount codes
+  seed/seed.js                   npm run seed | seed:demo | seed:destroy
+  tests/api.test.js
+  uploads/products/              rendered product imagery
+```

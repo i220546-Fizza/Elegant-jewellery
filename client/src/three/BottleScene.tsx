@@ -78,7 +78,6 @@ const Rig = ({
       const mat = ring.current.material as THREE.MeshStandardMaterial;
       mat.opacity = THREE.MathUtils.damp(mat.opacity, visible ? 0.95 : 0, 3, delta);
       if (visible) ring.current.position.y = THREE.MathUtils.damp(ring.current.position.y, 0.12 + highlight! * bodyHeight, 2.2, delta);
-      ring.current.rotation.y += delta * 0.2;
     }
   });
 
