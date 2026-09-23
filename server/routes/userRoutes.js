@@ -1,12 +1,12 @@
 const express = require('express');
-const { updateProfile, getWishlist, toggleWishlist, getUsers } = require('../controllers/userController');
-const { protect, admin } = require('../middleware/authMiddleware');
+const c = require('../controllers/userController');
+const { protect } = require('../middleware/authMiddleware');
 
 const router = express.Router();
 
-router.put('/profile', protect, updateProfile);
-router.get('/wishlist', protect, getWishlist);
-router.post('/wishlist/:productId', protect, toggleWishlist);
-router.get('/', protect, admin, getUsers);
+router.put('/profile', protect, c.updateProfile);
+router.put('/password', protect, c.changePassword);
+router.route('/addresses').get(protect, c.getAddresses).post(protect, c.addAddress);
+router.route('/addresses/:addressId').put(protect, c.updateAddress).delete(protect, c.deleteAddress);
 
 module.exports = router;

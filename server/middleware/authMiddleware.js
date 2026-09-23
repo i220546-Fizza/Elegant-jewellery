@@ -2,33 +2,53 @@ const jwt = require('jsonwebtoken');
 const asyncHandler = require('express-async-handler');
 const User = require('../models/User');
 
-const protect = asyncHandler(async (req, res, next) => {
-  let token;
+const extractToken = (req) => {
   const authHeader = req.headers.authorization;
+  if (authHeader && authHeader.startsWith('Bearer ')) return authHeader.split(' ')[1];
+  if (req.cookies && req.cookies.token) return req.cookies.token;
+  return null;
+};
 
-  if (authHeader && authHeader.startsWith('Bearer ')) {
-    token = authHeader.split(' ')[1];
-  } else if (req.cookies && req.cookies.token) {
-    token = req.cookies.token;
-  }
+const resolveUser = async (token) => {
+  const decoded = jwt.verify(token, process.env.JWT_SECRET);
+  const user = await User.findById(decoded.id).select('+passwordChangedAt');
+  if (!user || !user.isActive) return null;
+  if (user.changedPasswordAfter(decoded.iat)) return null;
+  return user;
+};
 
+const protect = asyncHandler(async (req, res, next) => {
+  const token = extractToken(req);
   if (!token) {
     res.status(401);
-    throw new Error('Not authorized, no token provided');
+    throw new Error('Please sign in to continue');
   }
 
+  let user = null;
   try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    req.user = await User.findById(decoded.id);
-    if (!req.user) {
-      res.status(401);
-      throw new Error('Not authorized, user no longer exists');
-    }
-    next();
-  } catch (err) {
-    res.status(401);
-    throw new Error('Not authorized, token invalid or expired');
+    user = await resolveUser(token);
+  } catch {
+    user = null;
   }
+  if (!user) {
+    res.status(401);
+    throw new Error('Your session has expired. Please sign in again');
+  }
+  req.user = user;
+  next();
+});
+
+// Attaches req.user when a valid token is present, but never blocks (guest checkout, etc).
+const optionalAuth = asyncHandler(async (req, res, next) => {
+  const token = extractToken(req);
+  if (token) {
+    try {
+      req.user = (await resolveUser(token)) || undefined;
+    } catch {
+      req.user = undefined;
+    }
+  }
+  next();
 });
 
 const admin = (req, res, next) => {
@@ -40,4 +60,4 @@ const admin = (req, res, next) => {
   }
 };
 
-module.exports = { protect, admin };
+module.exports = { protect, optionalAuth, admin };

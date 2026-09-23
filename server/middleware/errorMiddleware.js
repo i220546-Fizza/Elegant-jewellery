@@ -21,10 +21,19 @@ const errorHandler = (err, req, res, next) => {
       .join('. ');
   }
 
+  if (err.name === 'MulterError') {
+    statusCode = 400;
+    message = err.code === 'LIMIT_FILE_SIZE' ? 'That file is too large' : err.message;
+  }
+
+  if (err.message === 'Not allowed by CORS') {
+    statusCode = 403;
+  }
+
   if (err.code === 11000) {
     statusCode = 400;
     const field = Object.keys(err.keyValue || {})[0] || 'field';
-    message = `An account or record with that ${field} already exists`;
+    message = `A record with that ${field} already exists`;
   }
 
   res.status(statusCode).json({
