@@ -10,14 +10,28 @@ interface Props {
   pointer?: React.MutableRefObject<{ x: number; y: number }>;
   shadowOpacity?: number;
   staticShadows?: boolean;
+  /** x position of a travelling light strip (reflection sweeping across the glass) */
+  sweep?: () => number;
+  /** re-render the environment every frame (needed for the sweep) */
+  liveEnvironment?: boolean;
+  /** floor height for the contact shadow; false to render no floor shadow */
+  shadowY?: number | false;
 }
+
+const SweepStrip = ({ sweep }: { sweep: () => number }) => {
+  const ref = useRef<THREE.Mesh>(null);
+  useFrame(() => {
+    if (ref.current) ref.current.position.x = sweep();
+  });
+  return <Lightformer ref={ref} form="rect" intensity={5} color="#fffaf0" position={[-9, 1.2, 3.2]} scale={[0.9, 7, 1]} />;
+};
 
 /**
  * Soft photographic studio: a procedural environment built from light-formers
  * (no HDR download), a warm key light that drifts gently with the cursor, and
  * a soft contact shadow on the floor.
  */
-const Studio = ({ quality, pointer, shadowOpacity = 0.42, staticShadows = false }: Props) => {
+const Studio = ({ quality, pointer, shadowOpacity = 0.42, staticShadows = false, sweep, liveEnvironment = false, shadowY = 0.001 }: Props) => {
   const key = useRef<THREE.DirectionalLight>(null);
   const rim = useRef<THREE.Group>(null);
 
@@ -39,7 +53,7 @@ const Studio = ({ quality, pointer, shadowOpacity = 0.42, staticShadows = false 
       <directionalLight ref={key} position={[3, 5, 4]} intensity={1.6} color="#fff6e6" />
       <directionalLight position={[-4, 2.5, -3]} intensity={0.7} color="#efe6d4" />
 
-      <Environment resolution={quality === 'high' ? 256 : 128} frames={1}>
+      <Environment resolution={quality === 'high' ? 256 : 128} frames={liveEnvironment ? Infinity : 1}>
         {/* warm ivory surroundings so metals reflect the room, not a black void */}
         <color attach="background" args={['#a89f90']} />
         <group ref={rim}>
@@ -54,10 +68,12 @@ const Studio = ({ quality, pointer, shadowOpacity = 0.42, staticShadows = false 
           <Lightformer form="rect" intensity={0.8} color="#F8F7F3" position={[0, -3, 0]} rotation-x={-Math.PI / 2} scale={[10, 10, 1]} />
           <Lightformer form="ring" intensity={1.4} color="#ffffff" position={[1.8, 3.2, 3.5]} scale={1.2} />
         </group>
+        {sweep && <SweepStrip sweep={sweep} />}
       </Environment>
 
+      {shadowY !== false && (
       <ContactShadows
-        position={[0, 0.001, 0]}
+        position={[0, shadowY, 0]}
         opacity={shadowOpacity}
         scale={6}
         blur={2.6}
@@ -66,6 +82,7 @@ const Studio = ({ quality, pointer, shadowOpacity = 0.42, staticShadows = false 
         color="#2a241c"
         frames={staticShadows ? 1 : Infinity}
       />
+      )}
     </>
   );
 };

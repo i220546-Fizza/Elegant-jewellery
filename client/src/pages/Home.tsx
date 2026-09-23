@@ -1,5 +1,6 @@
 import Hero from '../components/home/Hero';
 import SignatureScents from '../components/home/SignatureScents';
+import SignatureTrio from '../components/home/SignatureTrio';
 import Marquee from '../components/home/Marquee';
 import ShopCollection from '../components/home/ShopCollection';
 import Composition from '../components/home/Composition';
@@ -12,6 +13,7 @@ const Home = () => {
   return (
     <>
       <Hero />
+      <SignatureTrio />
       <Marquee />
       <SignatureScents />
       <ShopCollection />

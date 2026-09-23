@@ -1,29 +1,11 @@
-import { Component, lazy, Suspense, useEffect, useState, type ReactNode } from 'react';
+import { lazy, Suspense, useEffect, useState } from 'react';
+import { WebGLBoundary, hasWebGL } from './webgl';
 import type { BottleSceneProps } from '../../three/BottleScene';
 import { assetUrl } from '../../lib/format';
 import { useDeviceQuality } from '../../hooks/useDeviceQuality';
 
 // three.js + R3F live in their own chunk and load only when a 3D view is shown.
 const BottleScene = lazy(() => import('../../three/BottleScene'));
-
-class WebGLBoundary extends Component<{ fallback: ReactNode; children: ReactNode }, { failed: boolean }> {
-  state = { failed: false };
-  static getDerivedStateFromError() {
-    return { failed: true };
-  }
-  render() {
-    return this.state.failed ? this.props.fallback : this.props.children;
-  }
-}
-
-const hasWebGL = () => {
-  try {
-    const c = document.createElement('canvas');
-    return !!(c.getContext('webgl2') || c.getContext('webgl'));
-  } catch {
-    return false;
-  }
-};
 
 type Props = Omit<BottleSceneProps, 'quality' | 'onReady'> & {
   poster?: string;

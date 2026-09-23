@@ -56,14 +56,31 @@ When `client/dist` exists, Express serves the storefront and the API from the sa
 
 ## The 3D showroom
 
-Every bottle is built procedurally in `client/src/three/`, so each product has a real 3D presentation without needing any model files:
+### Cinematic hero — "luxury perfume captured in motion"
+
+The home page opens like a fragrance commercial (`client/src/three/HeroScene.tsx`), on a sticky stage that plays as you scroll:
+
+1. The ivory studio fades in, then the Éclat bottle rises into frame with a slow turn and tilt.
+2. A champagne perfume mist blooms outward from the bottle (`Mist.tsx` / `particles.ts`: GPU soft particles with a depth-of-field falloff — mist and droplets far from the focal plane grow and soften into bokeh).
+3. Three liquid arcs pour around the bottle (`Splash.tsx`): flattened, tapering ribbons shaded as transmissive golden perfume, with a tapered pouring head and slow travelling waves along the surface.
+4. Tiny droplets detach from the arcs in slow motion, and fine gold dust twinkles in the air.
+5. A strip of light travels across the glass and the gold cap (a moving light-former in the live environment), and returns every twelve seconds.
+6. Only then does the typography slide into place.
+
+The cursor gently tilts the bottle, shifts the arcs with parallax, pushes the mist aside, moves the key light, and drifts the light pool of the backdrop. Scrolling carries the bottle to centre and turns it while the arcs draw back and the mist disperses into the page. The next section, **Our Signature Scents** (`TrioScene.tsx`), then raises Éclat, Essence and Noir into a composed trio on one shared floor shadow. In **The Composition**, mist and gold dust gather around whichever note layer (top, heart, base) you explore. Nothing spins continuously, and `prefers-reduced-motion` shows the final composition without any animation.
+
+The studio backdrop is rendered inside the scene (`Backdrop.tsx`), so the glass and liquid refract warm ivory light rather than an empty buffer, and its colours match the page exactly at the edges.
+
+### The bottle
+
+Every bottle is built procedurally in `client/src/three/`, so each product has a real 3D presentation without any model files:
 
 - `shapes.ts` — five silhouettes (classic, tall, round, facet, flacon) with a thick glass base, a neck, a gold collar and a cap.
 - `PerfumeBottle.tsx` — physically based glass (transmission, IOR, attenuation), liquid tinted per product, champagne-gold / black-lacquer / ivory caps, and a foil label drawn on a canvas.
-- `Studio.tsx` — a studio environment built from light-formers (no HDR download), a key light that drifts with the cursor, and a soft contact shadow.
-- `BottleScene.tsx` — the cursor-follow rig (window-wide in the hero), drag-to-rotate (full 360° on product pages), scroll-linked positioning, a gentle float, and the champagne highlight ring used by *The Composition*.
+- `Studio.tsx` — a procedural HDR-style environment built from light-formers (no HDR download), a key light that drifts with the cursor, and soft contact shadows.
+- `BottleScene.tsx` — the product viewer: cursor follow, drag to rotate (full 360° on product pages), and the note-layer highlight.
 
-**Performance:** three.js is its own lazy chunk (`Bottle3D.tsx`). A studio-render poster shows instantly and cross-fades to the live scene. Rendering pauses when the canvas is off-screen, the pixel ratio drops when frames slow down, and phones and low-power devices get a lighter material path. If WebGL is unavailable, the poster stays.
+**Performance:** three.js is its own lazy chunk (`Bottle3D.tsx`, `Hero.tsx`, `SignatureTrio.tsx`). Particle motion runs entirely on the GPU; phones get fewer particles and non-transmissive materials. A studio-render poster shows instantly and cross-fades to the live scene. Rendering pauses when the canvas is off-screen, the pixel ratio drops when frames slow down, and phones and low-power devices get a lighter material path. If WebGL is unavailable, the poster stays.
 
 **Custom models:** admins can upload a `.glb` / `.gltf` per product. It replaces the procedural bottle in every 3D view and is scaled to the same height automatically.
 

@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { motion } from 'framer-motion';
+import { useRef, useState } from 'react';
+import { motion, useScroll } from 'framer-motion';
 import Bottle3D from '../product/Bottle3D';
 import Reveal from '../ui/Reveal';
 import type { BottleSpec } from '../../types';
@@ -55,9 +55,11 @@ const Layer = ({ i, align, active, setActive }: { i: number; align: 'left' | 'ri
 
 const Composition = () => {
   const [active, setActive] = useState<number | null>(null);
+  const section = useRef<HTMLElement>(null);
+  const { scrollYProgress } = useScroll({ target: section, offset: ['start end', 'end start'] });
 
   return (
-    <section className="relative overflow-hidden bg-taupe/35 py-28 lg:py-36" aria-labelledby="composition-heading" onMouseLeave={() => setActive(null)}>
+    <section ref={section} className="relative overflow-hidden bg-taupe/35 py-28 lg:py-36" aria-labelledby="composition-heading" onMouseLeave={() => setActive(null)}>
       <div className="container-lux">
         <Reveal className="mx-auto max-w-2xl text-center">
           <p className="eyebrow flex items-center justify-center gap-4">
@@ -77,7 +79,7 @@ const Composition = () => {
           <div className="relative order-1 mx-auto h-[420px] w-full max-w-[460px] lg:order-2 lg:h-[600px]">
             <div aria-hidden className="absolute inset-[8%] rounded-full border border-ivory/80" />
             <div aria-hidden className="absolute inset-[18%] rounded-full bg-[radial-gradient(closest-side,rgba(248,247,243,0.9),transparent)]" />
-            <Bottle3D spec={BOTTLE} name="Essence" mode="viewer" highlight={active === null ? null : LAYERS[active].level} poster="/uploads/products/essence-1.webp" posterAlt="Essence perfume bottle" className="absolute inset-0" />
+            <Bottle3D spec={BOTTLE} name="Essence" mode="viewer" highlight={active === null ? null : LAYERS[active].level} notesProgress={() => scrollYProgress.get()} poster="/uploads/products/essence-1.webp" posterAlt="Essence perfume bottle" className="absolute inset-0" />
           </div>
           <div className="order-3">
             <Layer i={2} align="left" active={active} setActive={setActive} />

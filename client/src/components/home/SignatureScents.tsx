@@ -4,7 +4,6 @@ import { motion, useScroll, useTransform } from 'framer-motion';
 import { useRef } from 'react';
 import { productApi } from '../../services';
 import type { Product } from '../../types';
-import { SectionHeader } from '../ui/Feedback';
 import ProductImage from '../product/ProductImage';
 import Reveal from '../ui/Reveal';
 import { ArrowRight } from '../ui/Icons';
@@ -72,9 +71,9 @@ const SignatureScents = () => {
     <section className="py-28 lg:py-40" aria-labelledby="signature-heading">
       <div className="container-lux">
         <Reveal>
-          <SectionHeader eyebrow="The founding trio" title={<span id="signature-heading">Our Signature Scents</span>}>
+          <p id="signature-heading" className="mx-auto max-w-2xl text-center font-serif text-2xl font-light italic leading-snug text-stone sm:text-3xl">
             Three compositions that define the house — each one conceived to be worn for years, and remembered for longer.
-          </SectionHeader>
+          </p>
         </Reveal>
         <div className="mt-20 lg:mt-28">
           {list.map((p, i) => (

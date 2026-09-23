@@ -6,6 +6,15 @@ import type { BottleSpec } from '../types';
 import PerfumeBottle, { bottleHeight, type Quality } from './PerfumeBottle';
 import Studio from './Studio';
 import GLBModel from './GLBModel';
+import Mist from './Mist';
+import type { CloudShape, ParticleOptions } from './particles';
+
+// Fragrance-notes particles: a light champagne haze plus fine gold dust that
+// gathers around whichever layer (top / heart / base) is being explored.
+const NOTES_HAZE_LOOK: ParticleOptions = { color: '#CDB47E', color2: '#EFE4CB', opacity: 0.07, softness: 1, swirl: 0.04, aperture: 0.2 };
+const NOTES_DUST_LOOK: ParticleOptions = { color: '#BFA36A', color2: '#FFF1CF', opacity: 0.9, softness: 0.35, sparkle: 0.9, swirl: 0.07, aperture: 0.4 };
+const NOTES_HAZE: CloudShape = { count: 90, radius: [0.55, 1.15], height: [0.2, 2.0], size: [0.3, 0.6], seed: 3 };
+const NOTES_DUST: CloudShape = { count: 90, radius: [0.75, 1.3], height: [0.05, 2.2], size: [0.02, 0.045], seed: 17 };
 
 export interface BottleSceneProps {
   spec: BottleSpec;
@@ -16,6 +25,8 @@ export interface BottleSceneProps {
   quality?: Quality;
   /** returns 0..1 scroll progress for scroll-linked positioning */
   scrollProgress?: () => number;
+  /** 0..1 section progress for the fragrance-notes particles (emerge, then disperse) */
+  notesProgress?: () => number;
   /** 0..1 height to highlight with a champagne ring (composition section), or null */
   highlight?: number | null;
   initialYaw?: number;
@@ -37,11 +48,12 @@ const Rig = ({
   quality,
   scrollProgress,
   highlight,
+  notesProgress,
   initialYaw = 0,
   pointer,
   drag,
 }: Required<Pick<BottleSceneProps, 'spec' | 'name' | 'mode' | 'quality'>> &
-  Pick<BottleSceneProps, 'modelUrl' | 'scrollProgress' | 'highlight' | 'initialYaw'> & {
+  Pick<BottleSceneProps, 'modelUrl' | 'scrollProgress' | 'notesProgress' | 'highlight' | 'initialYaw'> & {
     pointer: React.MutableRefObject<{ x: number; y: number }>;
     drag: React.MutableRefObject<{ yaw: number; pitch: number; active: boolean }>;
   }) => {
@@ -88,6 +100,29 @@ const Rig = ({
           <GLBModel url={modelUrl} targetHeight={height} fallback={<PerfumeBottle spec={spec} name={name} quality={quality} />} />
         ) : (
           <PerfumeBottle spec={spec} name={name} quality={quality} />
+        )}
+        {highlight !== undefined && (
+          <>
+            <Mist
+              shape={NOTES_HAZE}
+              look={NOTES_HAZE_LOOK}
+              pointer={pointer}
+              frozen={reduced}
+              attract={() => ({ y: 0.12 + (highlight ?? 0.5) * bodyHeight, amount: highlight === null ? 0 : 0.55 })}
+              intro={notesProgress ? () => Math.min(1, Math.max(0, (notesProgress() - 0.12) / 0.3)) : undefined}
+              disperse={notesProgress ? () => Math.min(1, Math.max(0, (notesProgress() - 0.78) / 0.22)) : undefined}
+            />
+            <Mist
+              shape={NOTES_DUST}
+              look={NOTES_DUST_LOOK}
+              pointer={pointer}
+              frozen={reduced}
+              attract={() => ({ y: 0.12 + (highlight ?? 0.5) * bodyHeight, amount: highlight === null ? 0 : 0.85 })}
+              intro={notesProgress ? () => Math.min(1, Math.max(0, (notesProgress() - 0.2) / 0.3)) : undefined}
+              disperse={notesProgress ? () => Math.min(1, Math.max(0, (notesProgress() - 0.78) / 0.22)) : undefined}
+              renderOrder={4}
+            />
+          </>
         )}
         {highlight !== undefined && (
           <mesh ref={ring} position={[0, 0.5, 0]} rotation={[Math.PI / 2, 0, 0]}>
@@ -139,6 +174,7 @@ const BottleScene = ({
   mode = 'viewer',
   quality = 'high',
   scrollProgress,
+  notesProgress,
   highlight,
   initialYaw,
   zoom,
@@ -230,7 +266,7 @@ const BottleScene = ({
         <PerformanceMonitor onDecline={() => setDpr((d) => Math.max(1, d - 0.25))} />
         <FrameCamera spec={spec} zoom={zoom} cameraY={cameraY} />
         <Suspense fallback={null}>
-          <Studio quality={quality} pointer={mode === 'static' ? undefined : pointer} staticShadows={mode === 'static' || quality === 'low'} />
+          <Studio quality={quality} pointer={mode === 'static' ? undefined : pointer} staticShadows={mode === 'static' || quality === 'low'} shadowY={-bottleHeight(spec) / 2 + 0.05} />
           <Rig
             spec={spec}
             name={name}
@@ -238,6 +274,7 @@ const BottleScene = ({
             mode={mode}
             quality={quality}
             scrollProgress={scrollProgress}
+            notesProgress={notesProgress}
             highlight={highlight}
             initialYaw={initialYaw}
             pointer={pointer}
