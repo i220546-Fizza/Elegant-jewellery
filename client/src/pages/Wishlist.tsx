@@ -1,34 +1,60 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useWishlist } from '../context/WishlistContext';
-import ProductGrid from '../components/ProductGrid';
-import EmptyState from '../components/EmptyState';
-import { HeartIcon } from '../components/Icons';
+import { productApi } from '../services';
+import type { Product } from '../types';
+import ProductCard, { ProductCardSkeleton } from '../components/product/ProductCard';
+import { EmptyState } from '../components/ui/Feedback';
+import PageHeader from '../components/ui/PageHeader';
+import { useTitle } from '../lib/useTitle';
 
-const Wishlist = () => {
-  const { products } = useWishlist();
+/** Wishlist grid. Used standalone (/wishlist) and inside the account area. */
+export const WishlistGrid = () => {
+  const { ids } = useWishlist();
+  const [products, setProducts] = useState<Product[] | null>(null);
+  const key = [...ids].sort().join(',');
 
   useEffect(() => {
-    document.title = 'Wishlist | Elegant Jewellery';
-  }, []);
+    if (!key) {
+      setProducts([]);
+      return;
+    }
+    productApi
+      .list({ ids: key, limit: 60 })
+      .then((r) => setProducts(r.products))
+      .catch(() => setProducts([]));
+  }, [key]);
 
-  return (
-    <div className="container-luxe py-12">
-      <div className="mb-10 text-center">
-        <p className="section-kicker">Saved For Later</p>
-        <h1 className="section-heading mt-3">My Wishlist</h1>
+  // Keep the grid in step when an item is removed from the wishlist.
+  const visible = products?.filter((p) => ids.includes(p._id));
+
+  if (!visible) {
+    return (
+      <div className="grid grid-cols-2 gap-6 lg:grid-cols-3">
+        {[0, 1, 2].map((i) => (
+          <ProductCardSkeleton key={i} />
+        ))}
       </div>
-      {products.length === 0 ? (
-        <EmptyState
-          title="Your wishlist is empty"
-          message="Tap the heart icon on any product to save it here for later."
-          icon={<HeartIcon width={28} height={28} />}
-          actionLabel="Explore Collections"
-          actionTo="/shop"
-        />
-      ) : (
-        <ProductGrid products={products} />
-      )}
+    );
+  }
+  if (visible.length === 0) return <EmptyState title="Your wishlist is empty" text="Tap the heart on any fragrance to save it here." action={{ label: 'Explore fragrances', to: '/fragrances' }} />;
+  return (
+    <div className="grid grid-cols-2 gap-x-4 gap-y-12 sm:gap-x-6 lg:grid-cols-3 lg:gap-x-8">
+      {visible.map((p, i) => (
+        <ProductCard key={p._id} product={p} index={i} />
+      ))}
     </div>
+  );
+};
+
+const Wishlist = () => {
+  useTitle('Wishlist');
+  return (
+    <>
+      <PageHeader eyebrow="Saved for later" title="Wishlist" crumbs={[{ label: 'Home', to: '/' }, { label: 'Wishlist' }]} />
+      <section className="container-lux py-16 lg:py-20">
+        <WishlistGrid />
+      </section>
+    </>
   );
 };
 

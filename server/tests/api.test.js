@@ -202,6 +202,7 @@ test('password reset issues a single-use token and invalidates old sessions', as
   await new Promise((r) => setTimeout(r, 1100));
   await request(app).put(`/api/auth/reset-password/${forgot.body.devResetToken}`).send({ password: 'NewPass456' }).expect(200);
   await request(app).put(`/api/auth/reset-password/${forgot.body.devResetToken}`).send({ password: 'NewPass789' }).expect(400);
-  await agent.get('/api/auth/me').expect(401);
+  const stale = await agent.get('/api/auth/me').expect(200);
+  assert.equal(stale.body.user, null);
   await request(app).post('/api/auth/login').send({ email: 'reset@test.com', password: 'NewPass456' }).expect(200);
 });

@@ -5,15 +5,18 @@ import App from './App';
 import { AuthProvider } from './context/AuthContext';
 import { CartProvider } from './context/CartContext';
 import { WishlistProvider } from './context/WishlistContext';
+import { UIProvider } from './context/UIContext';
 import './index.css';
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <BrowserRouter>
+    <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
       <AuthProvider>
         <CartProvider>
           <WishlistProvider>
-            <App />
+            <UIProvider>
+              <App />
+            </UIProvider>
           </WishlistProvider>
         </CartProvider>
       </AuthProvider>

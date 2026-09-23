@@ -35,13 +35,19 @@ app.use(
 );
 
 const allowedOrigins = (process.env.CLIENT_URL || 'http://localhost:5173').split(',').map((o) => o.trim());
+// CORS only matters for the API. Requests from this server's own origin (the
+// built storefront served below) are always allowed; other origins must be
+// listed in CLIENT_URL.
 app.use(
-  cors({
-    origin: (origin, callback) => {
-      if (!origin || allowedOrigins.includes(origin)) callback(null, true);
-      else callback(new Error('Not allowed by CORS'));
-    },
-    credentials: true,
+  '/api',
+  cors((req, callback) => {
+    const origin = req.header('Origin');
+    const self = `${req.protocol}://${req.get('host')}`;
+    if (!origin || origin === self || allowedOrigins.includes(origin)) {
+      callback(null, { origin: true, credentials: true });
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
   })
 );
 
@@ -65,6 +71,7 @@ app.use('/api/cart', require('./routes/cartRoutes'));
 app.use('/api/wishlist', require('./routes/wishlistRoutes'));
 app.use('/api/coupons', require('./routes/couponRoutes'));
 app.use('/api/newsletter', require('./routes/newsletterRoutes'));
+app.use('/api/contact', require('./routes/contactRoutes'));
 app.use('/api/uploads', require('./routes/uploadRoutes'));
 app.use('/api/admin', require('./routes/adminRoutes'));
 

@@ -1,7 +1,7 @@
 User-agent: *
 Allow: /
 Disallow: /admin
+Disallow: /account
 Disallow: /checkout
-Disallow: /cart
 
 Sitemap: https://elegant-jewllery.onrender.com/sitemap.xml

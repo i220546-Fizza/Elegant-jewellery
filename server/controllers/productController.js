@@ -90,6 +90,9 @@ const getProducts = asyncHandler(async (req, res) => {
     query.categories = cat._id;
   }
   if (gender && ['women', 'men', 'unisex'].includes(gender)) query.gender = gender;
+  if (req.query.ids) {
+    query._id = { $in: String(req.query.ids).split(',').filter((id) => mongoose.isValidObjectId(id)).slice(0, 60) };
+  }
   if (family) query.fragranceFamily = new RegExp(`^${escapeRegex(family)}$`, 'i');
   if (minPrice || maxPrice) {
     query.basePrice = {};

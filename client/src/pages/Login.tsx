@@ -1,78 +1,69 @@
-import { useEffect, useState } from 'react';
-import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { useState } from 'react';
+import { Link, Navigate, useLocation, useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
+import AuthShell from '../components/account/AuthShell';
+import PasswordField from '../components/account/PasswordField';
 import { useAuth } from '../context/AuthContext';
-import { getErrorMessage } from '../services/api';
+import { getErrorMessage } from '../lib/api';
+import { useTitle } from '../lib/useTitle';
 
 const Login = () => {
-  const { login } = useAuth();
+  useTitle('Sign in');
+  const { login, user } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
+  const from = (location.state as { from?: string } | null)?.from;
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [loading, setLoading] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState('');
 
-  useEffect(() => {
-    document.title = 'Sign In | Elegant Jewellery';
-  }, []);
+  if (user && !busy) return <Navigate to={from || (user.role === 'admin' ? '/admin' : '/account')} replace />;
 
-  const from = (location.state as { from?: { pathname: string } } | null)?.from?.pathname || '/';
-
-  const handleSubmit = async (e: React.FormEvent) => {
+  const submit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
+    setBusy(true);
+    setError('');
     try {
-      await login(email, password);
-      toast.success('Welcome back!');
-      navigate(from, { replace: true });
+      const u = await login(email, password);
+      toast.success(`Welcome back, ${u.name.split(' ')[0]}`);
+      navigate(from || (u.role === 'admin' ? '/admin' : '/account'), { replace: true });
     } catch (err) {
-      toast.error(getErrorMessage(err));
+      setError(getErrorMessage(err));
     } finally {
-      setLoading(false);
+      setBusy(false);
     }
   };
 
   return (
-    <div className="container-luxe flex min-h-[70vh] items-center justify-center py-16">
-      <div className="card-luxe w-full max-w-md p-8 sm:p-10">
-        <div className="text-center">
-          <p className="section-kicker">Welcome Back</p>
-          <h1 className="mt-2 font-display text-3xl text-brown-dark">Sign In</h1>
-        </div>
-        <form onSubmit={handleSubmit} className="mt-8 space-y-4">
-          <input
-            required
-            type="email"
-            placeholder="Email Address"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            className="input-luxe"
-          />
-          <input
-            required
-            type="password"
-            placeholder="Password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            className="input-luxe"
-          />
-          <div className="text-right">
-            <Link to="/forgot-password" className="text-xs text-champagne-dark hover:underline">
-              Forgot password?
-            </Link>
-          </div>
-          <button type="submit" disabled={loading} className="btn-primary w-full">
-            {loading ? 'Signing in...' : 'Sign In'}
-          </button>
-        </form>
-        <p className="mt-6 text-center text-sm text-brown-light">
-          New here?{' '}
-          <Link to="/signup" className="text-champagne-dark hover:underline">
-            Create an account
+    <AuthShell eyebrow="Welcome back" title="Sign in">
+      <form onSubmit={submit} className="space-y-8">
+        <label className="block">
+          <span className="label">Email</span>
+          <input className="field" type="email" autoComplete="email" required value={email} onChange={(e) => setEmail(e.target.value)} />
+        </label>
+        <PasswordField label="Password" value={password} onChange={setPassword} autoComplete="current-password" />
+        <div className="flex justify-end">
+          <Link to="/forgot-password" className="text-xs text-stone underline-offset-4 hover:text-ink hover:underline">
+            Forgot your password?
           </Link>
-        </p>
-      </div>
-    </div>
+        </div>
+        {error && (
+          <p role="alert" className="border-l-2 border-gold pl-4 text-sm">
+            {error}
+          </p>
+        )}
+        <button type="submit" disabled={busy} className="btn-dark w-full">
+          {busy ? 'Signing in…' : 'Sign in'}
+        </button>
+      </form>
+      <p className="mt-10 text-sm text-stone">
+        New to NB Classic Scents?{' '}
+        <Link to="/register" state={location.state} className="text-ink underline decoration-gold underline-offset-4">
+          Create an account
+        </Link>
+      </p>
+    </AuthShell>
   );
 };
 

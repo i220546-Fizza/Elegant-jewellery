@@ -1,75 +1,65 @@
-import { useEffect, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import toast from 'react-hot-toast';
-import { requestPasswordReset } from '../services/authService';
-import { getErrorMessage } from '../services/api';
+import { useState } from 'react';
+import { Link } from 'react-router-dom';
+import AuthShell from '../components/account/AuthShell';
+import { authApi } from '../services';
+import { getErrorMessage } from '../lib/api';
+import { useTitle } from '../lib/useTitle';
 
 const ForgotPassword = () => {
+  useTitle('Forgot password');
   const [email, setEmail] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [sent, setSent] = useState(false);
-  const navigate = useNavigate();
+  const [busy, setBusy] = useState(false);
+  const [sent, setSent] = useState<{ message: string; devResetToken?: string } | null>(null);
+  const [error, setError] = useState('');
 
-  useEffect(() => {
-    document.title = 'Forgot Password | Elegant Jewellery';
-  }, []);
-
-  const handleSubmit = async (e: React.FormEvent) => {
+  const submit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
+    setBusy(true);
+    setError('');
     try {
-      const { resetToken } = await requestPasswordReset(email);
-      setSent(true);
-      toast.success('Reset instructions generated');
-      if (resetToken) {
-        // Demo build has no email provider configured, so the reset link is
-        // surfaced directly instead of being emailed.
-        setTimeout(() => navigate(`/reset-password/${resetToken}`), 1200);
-      }
+      setSent(await authApi.forgot(email));
     } catch (err) {
-      toast.error(getErrorMessage(err));
+      setError(getErrorMessage(err));
     } finally {
-      setLoading(false);
+      setBusy(false);
     }
   };
 
   return (
-    <div className="container-luxe flex min-h-[70vh] items-center justify-center py-16">
-      <div className="card-luxe w-full max-w-md p-8 sm:p-10">
-        <div className="text-center">
-          <p className="section-kicker">Account Recovery</p>
-          <h1 className="mt-2 font-display text-3xl text-brown-dark">Forgot Password</h1>
-          <p className="mt-3 text-sm text-brown-light">
-            Enter your email address and we'll help you reset your password.
-          </p>
-        </div>
-        {sent ? (
-          <p className="mt-8 rounded-lg bg-champagne/10 p-4 text-center text-sm text-brown-dark">
-            If an account exists for {email}, reset instructions have been generated. Redirecting you now...
-          </p>
-        ) : (
-          <form onSubmit={handleSubmit} className="mt-8 space-y-4">
-            <input
-              required
-              type="email"
-              placeholder="Email Address"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="input-luxe"
-            />
-            <button type="submit" disabled={loading} className="btn-primary w-full">
-              {loading ? 'Sending...' : 'Send Reset Instructions'}
-            </button>
-          </form>
-        )}
-        <p className="mt-6 text-center text-sm text-brown-light">
-          Remembered your password?{' '}
-          <Link to="/login" className="text-champagne-dark hover:underline">
-            Sign in
+    <AuthShell eyebrow="Account recovery" title="Forgot password">
+      {sent ? (
+        <div>
+          <p className="text-[15px] leading-relaxed text-stone">{sent.message}</p>
+          {sent.devResetToken && (
+            <p className="mt-6 border border-dashed border-gold p-4 text-sm">
+              Development mode (no email service configured):{' '}
+              <Link to={`/reset-password/${sent.devResetToken}`} className="underline underline-offset-4">
+                reset your password here
+              </Link>
+              .
+            </p>
+          )}
+          <Link to="/login" className="btn-outline mt-10">
+            Back to sign in
           </Link>
-        </p>
-      </div>
-    </div>
+        </div>
+      ) : (
+        <form onSubmit={submit} className="space-y-8">
+          <p className="text-sm text-stone">Enter the email for your account and we will send you a link to choose a new password.</p>
+          <label className="block">
+            <span className="label">Email</span>
+            <input className="field" type="email" autoComplete="email" required value={email} onChange={(e) => setEmail(e.target.value)} />
+          </label>
+          {error && <p role="alert" className="border-l-2 border-gold pl-4 text-sm">{error}</p>}
+          <button type="submit" disabled={busy} className="btn-dark w-full">
+            {busy ? 'Sending…' : 'Send reset link'}
+          </button>
+          <Link to="/login" className="block text-center text-xs text-stone hover:text-ink">
+            Back to sign in
+          </Link>
+        </form>
+      )}
+    </AuthShell>
   );
 };
 

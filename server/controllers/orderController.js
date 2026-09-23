@@ -164,7 +164,7 @@ const createOrder = asyncHandler(async (req, res) => {
   sendEmail({
     to: order.customerInfo.email,
     subject: `Your NB Classic Scents order ${order.orderNumber}`,
-    text: `Thank you, ${order.customerInfo.name}.\n\nWe have received your order ${order.orderNumber}.\n\n${order.orderItems
+    text: `Thank you, ${order.customerInfo.name}.\n\nWe have received your order ${order.orderNumber}.\nView it any time: ${(process.env.CLIENT_URL || 'http://localhost:5173').split(',')[0].trim()}/order/${order._id}?email=${encodeURIComponent(order.customerInfo.email)}\n\n${order.orderItems
       .map((i) => `${i.quantity} x ${i.name} (${i.size}) - ${formatPKR(i.price * i.quantity)}`)
       .join('\n')}\n\nTotal: ${formatPKR(order.totalPrice)}\nPayment: ${order.paymentMethod}\n\nNB Classic Scents`,
   }).catch((err) => console.error(`Order email failed: ${err.message}`));
@@ -176,7 +176,8 @@ const canView = (order, req) => {
   const isOwner = order.user && req.user && order.user.toString() === req.user._id.toString();
   const isAdmin = req.user && req.user.role === 'admin';
   const email = String(req.query.email || '').toLowerCase();
-  const isGuestMatch = !order.user && email && email === order.customerInfo.email;
+  // Anyone holding the order link plus the checkout email may view it (guest checkout).
+  const isGuestMatch = email && email === order.customerInfo.email;
   return isOwner || isAdmin || isGuestMatch;
 };
 
@@ -186,6 +187,18 @@ const getOrderById = asyncHandler(async (req, res) => {
   if (!order || !canView(order, req)) {
     res.status(404);
     throw new Error('Order not found');
+  }
+  res.json({ success: true, order });
+});
+
+// @route   GET /api/orders/lookup?orderNumber=&email=   (guest order tracking)
+const lookupOrder = asyncHandler(async (req, res) => {
+  const orderNumber = String(req.query.orderNumber || '').trim().toUpperCase();
+  const email = String(req.query.email || '').trim().toLowerCase();
+  const order = orderNumber && email ? await Order.findOne({ orderNumber, 'customerInfo.email': email }) : null;
+  if (!order) {
+    res.status(404);
+    throw new Error('We could not find an order with those details');
   }
   res.json({ success: true, order });
 });
@@ -282,4 +295,4 @@ const updateOrderStatus = asyncHandler(async (req, res) => {
   res.json({ success: true, order });
 });
 
-module.exports = { createOrder, getOrderById, getMyOrders, cancelMyOrder, getAllOrders, updateOrderStatus };
+module.exports = { lookupOrder, createOrder, getOrderById, getMyOrders, cancelMyOrder, getAllOrders, updateOrderStatus };

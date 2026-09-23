@@ -1,105 +1,103 @@
-import { Link, useNavigate } from 'react-router-dom';
-import { useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
-import { formatCurrency } from '../utils/format';
-import QuantitySelector from '../components/QuantitySelector';
-import EmptyState from '../components/EmptyState';
-import { BagIcon, TrashIcon } from '../components/Icons';
-
-const FREE_SHIPPING_THRESHOLD = 15000;
-const SHIPPING_FEE = 350;
+import PageHeader from '../components/ui/PageHeader';
+import ProductImage from '../components/product/ProductImage';
+import Quantity from '../components/ui/Quantity';
+import CouponForm from '../components/product/CouponForm';
+import { Totals } from '../components/product/OrderSummary';
+import { EmptyState, Spinner } from '../components/ui/Feedback';
+import { ArrowLeft } from '../components/ui/Icons';
+import { formatPrice } from '../lib/format';
+import { useTitle } from '../lib/useTitle';
 
 const Cart = () => {
-  const { items, updateQuantity, removeFromCart, subtotal } = useCart();
-  const navigate = useNavigate();
-
-  useEffect(() => {
-    document.title = 'Shopping Bag | Elegant Jewellery';
-  }, []);
-
-  const shipping = items.length === 0 ? 0 : subtotal >= FREE_SHIPPING_THRESHOLD ? 0 : SHIPPING_FEE;
-  const total = subtotal + shipping;
-
-  if (items.length === 0) {
-    return (
-      <div className="container-luxe py-20">
-        <EmptyState
-          title="Your bag is empty"
-          message="Looks like you haven't added any pieces yet. Explore our collections to find something you'll love."
-          icon={<BagIcon width={32} height={32} />}
-          actionLabel="Continue Shopping"
-          actionTo="/shop"
-        />
-      </div>
-    );
-  }
+  useTitle('Shopping Bag');
+  const { refs, quote, setQuantity, removeItem, syncing } = useCart();
 
   return (
-    <div className="container-luxe py-12">
-      <h1 className="section-heading mb-10 text-center">Shopping Bag</h1>
-
-      <div className="grid grid-cols-1 gap-10 lg:grid-cols-[1fr_360px]">
-        <div className="space-y-4">
-          {items.map((item) => (
-            <div
-              key={`${item.product}-${item.size}`}
-              className="card-luxe flex flex-col gap-4 p-4 sm:flex-row sm:items-center"
-            >
-              <img src={item.image} alt={item.name} className="h-24 w-24 flex-shrink-0 rounded-xl object-cover bg-beige" />
-              <div className="flex-1">
-                <p className="font-display text-lg text-brown-dark">{item.name}</p>
-                {item.size && <p className="text-xs text-brown-light">Size: {item.size}</p>}
-                <p className="mt-1 text-sm font-medium text-brown-dark">{formatCurrency(item.price)}</p>
+    <>
+      <PageHeader eyebrow="Your selection" title="Shopping Bag" crumbs={[{ label: 'Home', to: '/' }, { label: 'Bag' }]} />
+      <section className="container-lux py-16 lg:py-20">
+        {refs.length === 0 ? (
+          <EmptyState title="Your bag is empty" text="A signature is waiting to be found." action={{ label: 'Explore fragrances', to: '/fragrances' }} />
+        ) : !quote ? (
+          <Spinner label="Preparing your bag" />
+        ) : (
+          <div className="grid gap-16 lg:grid-cols-12">
+            <div className="lg:col-span-8">
+              <div className="hidden grid-cols-[1fr_140px_120px] border-b border-taupe pb-4 eyebrow md:grid">
+                <span>Fragrance</span>
+                <span>Quantity</span>
+                <span className="text-right">Total</span>
               </div>
-              <QuantitySelector
-                quantity={item.quantity}
-                max={item.stock}
-                onChange={(q) => updateQuantity(item.product, item.size, q)}
-              />
-              <div className="flex items-center justify-between gap-4 sm:flex-col sm:items-end">
-                <span className="font-medium text-brown-dark">{formatCurrency(item.price * item.quantity)}</span>
-                <button
-                  aria-label="Remove item"
-                  onClick={() => removeFromCart(item.product, item.size)}
-                  className="text-brown-light hover:text-red-500"
-                >
-                  <TrashIcon width={18} height={18} />
-                </button>
-              </div>
+              <ul className="divide-y divide-taupe/70">
+                {quote.items.map((l) => (
+                  <li key={l.variantId} className="grid grid-cols-[96px_1fr] gap-5 py-8 md:grid-cols-[1fr_140px_120px] md:items-center md:gap-0">
+                    <div className="flex gap-6 md:items-center">
+                      <Link to={`/fragrance/${l.slug}`} className="h-32 w-24 shrink-0 bg-taupe/40">
+                        <ProductImage src={l.image} alt={l.name} className="h-full w-full object-contain p-2" />
+                      </Link>
+                      <div className="hidden md:block">
+                        <Link to={`/fragrance/${l.slug}`} className="font-serif text-2xl hover:text-stone">
+                          {l.name}
+                        </Link>
+                        <p className="mt-1 text-xs text-stone">
+                          {l.fragranceFamily} · {l.size}
+                        </p>
+                        <p className="mt-2 text-sm">{formatPrice(l.price)}</p>
+                        {l.stock < l.requestedQuantity && <p className="mt-1 text-xs">Only {l.stock} available — quantity adjusted</p>}
+                        <button type="button" onClick={() => removeItem(l.product, l.variantId)} className="mt-3 font-sans text-[10px] uppercase tracking-wide2 text-stone hover:text-ink">
+                          Remove
+                        </button>
+                      </div>
+                    </div>
+                    <div className="md:hidden">
+                      <Link to={`/fragrance/${l.slug}`} className="font-serif text-2xl">
+                        {l.name}
+                      </Link>
+                      <p className="mt-1 text-xs text-stone">
+                        {l.size} · {formatPrice(l.price)}
+                      </p>
+                      <div className="mt-4 flex items-center justify-between">
+                        <Quantity small value={l.quantity} max={Math.min(20, l.stock)} onChange={(n) => setQuantity(l.product, l.variantId, n)} />
+                        <span className="text-sm">{formatPrice(l.price * l.quantity)}</span>
+                      </div>
+                      <button type="button" onClick={() => removeItem(l.product, l.variantId)} className="mt-3 font-sans text-[10px] uppercase tracking-wide2 text-stone">
+                        Remove
+                      </button>
+                    </div>
+                    <div className="hidden md:block">
+                      <Quantity small value={l.quantity} max={Math.min(20, l.stock)} onChange={(n) => setQuantity(l.product, l.variantId, n)} />
+                    </div>
+                    <p className="hidden text-right md:block">{formatPrice(l.price * l.quantity)}</p>
+                  </li>
+                ))}
+              </ul>
+              <Link to="/fragrances" className="link-lux mt-8">
+                <ArrowLeft size={14} /> Continue shopping
+              </Link>
             </div>
-          ))}
-        </div>
 
-        <div className="card-luxe h-fit p-6">
-          <h2 className="font-display text-xl text-brown-dark">Order Summary</h2>
-          <div className="mt-6 space-y-3 text-sm">
-            <div className="flex justify-between text-brown-light">
-              <span>Subtotal</span>
-              <span>{formatCurrency(subtotal)}</span>
-            </div>
-            <div className="flex justify-between text-brown-light">
-              <span>Shipping</span>
-              <span>{shipping === 0 ? 'Free' : formatCurrency(shipping)}</span>
-            </div>
-            {subtotal < FREE_SHIPPING_THRESHOLD && (
-              <p className="text-xs text-champagne-dark">
-                Add {formatCurrency(FREE_SHIPPING_THRESHOLD - subtotal)} more for free shipping
-              </p>
-            )}
-            <div className="border-t border-brown-dark/10 pt-3 flex justify-between text-base font-medium text-brown-dark">
-              <span>Total</span>
-              <span>{formatCurrency(total)}</span>
-            </div>
+            <aside className="lg:col-span-4">
+              <div className={`card-panel p-8 lg:sticky lg:top-28 ${syncing ? 'opacity-70' : ''} transition-opacity`}>
+                <p className="font-serif text-3xl">Order summary</p>
+                <div className="mt-8">
+                  <CouponForm />
+                </div>
+                <div className="mt-8">
+                  <Totals subtotal={quote.subtotal} discount={quote.discount} shipping={quote.shipping} total={quote.total} couponCode={quote.couponCode} />
+                </div>
+                {quote.shipping > 0 && <p className="mt-4 text-xs text-stone">Add {formatPrice(quote.freeShippingThreshold - (quote.subtotal - quote.discount))} more for complimentary delivery.</p>}
+                <Link to="/checkout" className="btn-dark mt-8 w-full">
+                  Proceed to checkout
+                </Link>
+                <p className="mt-4 text-center text-xs text-stone">Cash on delivery · Card · Online payment</p>
+              </div>
+            </aside>
           </div>
-          <button onClick={() => navigate('/checkout')} className="btn-primary mt-6 w-full">
-            Proceed to Checkout
-          </button>
-          <Link to="/shop" className="mt-4 block text-center text-xs uppercase tracking-widest text-champagne-dark hover:underline">
-            Continue Shopping
-          </Link>
-        </div>
-      </div>
-    </div>
+        )}
+      </section>
+    </>
   );
 };
 

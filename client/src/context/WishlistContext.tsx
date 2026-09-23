@@ -1,94 +1,72 @@
-import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import toast from 'react-hot-toast';
 import { useAuth } from './AuthContext';
-import * as userService from '../services/userService';
+import { wishlistApi } from '../services';
+import { readStorage, writeStorage } from '../lib/storage';
 import type { Product } from '../types';
 
 interface WishlistContextValue {
-  ids: Set<string>;
-  products: Product[];
+  ids: string[];
+  has: (id: string) => boolean;
   toggle: (product: Product) => Promise<void>;
-  isWishlisted: (productId: string) => boolean;
+  count: number;
 }
 
 const WishlistContext = createContext<WishlistContextValue | undefined>(undefined);
-const STORAGE_KEY = 'ej_wishlist';
-
-const loadLocal = (): string[] => {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    return raw ? (JSON.parse(raw) as string[]) : [];
-  } catch {
-    return [];
-  }
-};
+const KEY = 'nb_wishlist';
 
 export const WishlistProvider = ({ children }: { children: ReactNode }) => {
-  const { user } = useAuth();
-  const [ids, setIds] = useState<Set<string>>(new Set(loadLocal()));
-  const [products, setProducts] = useState<Product[]>([]);
+  const { user, loading } = useAuth();
+  const [ids, setIds] = useState<string[]>(() => readStorage<string[]>(KEY, []));
+  const prevUser = useRef<string | null | undefined>(undefined);
 
   useEffect(() => {
-    if (user) {
-      userService
-        .fetchWishlist()
-        .then((fetched) => {
-          setIds(new Set(fetched.map((p) => p._id)));
-          setProducts(fetched);
+    if (loading) return;
+    const uid = user?._id ?? null;
+    const prev = prevUser.current;
+    prevUser.current = uid;
+    if (uid && uid !== prev) {
+      wishlistApi
+        .merge(readStorage<string[]>(KEY, []))
+        .then((products) => {
+          setIds(products.map((p) => p._id));
+          writeStorage(KEY, []);
         })
         .catch(() => {});
+    } else if (!uid && prev) {
+      setIds([]);
     }
-  }, [user]);
+  }, [user, loading]);
 
   useEffect(() => {
-    if (!user) {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(Array.from(ids)));
-    }
+    if (!user) writeStorage(KEY, ids);
   }, [ids, user]);
 
   const toggle = useCallback(
     async (product: Product) => {
-      const wasWishlisted = ids.has(product._id);
+      const had = ids.includes(product._id);
+      setIds((prev) => (had ? prev.filter((i) => i !== product._id) : [...prev, product._id]));
       if (user) {
         try {
-          const { added } = await userService.toggleWishlistItem(product._id);
-          setIds((prev) => {
-            const next = new Set(prev);
-            if (added) next.add(product._id);
-            else next.delete(product._id);
-            return next;
-          });
-          setProducts((prev) => (added ? [...prev, product] : prev.filter((p) => p._id !== product._id)));
-          toast.success(added ? `${product.name} added to wishlist` : `${product.name} removed from wishlist`);
+          const res = await wishlistApi.toggle(product._id);
+          setIds(res.ids);
         } catch {
-          toast.error('Could not update wishlist');
+          setIds((prev) => (had ? [...prev, product._id] : prev.filter((i) => i !== product._id)));
+          toast.error('We could not update your wishlist');
+          return;
         }
-      } else {
-        setIds((prev) => {
-          const next = new Set(prev);
-          if (wasWishlisted) next.delete(product._id);
-          else next.add(product._id);
-          return next;
-        });
-        setProducts((prev) => (wasWishlisted ? prev.filter((p) => p._id !== product._id) : [...prev, product]));
-        toast.success(wasWishlisted ? `${product.name} removed from wishlist` : `${product.name} added to wishlist`);
       }
+      toast.success(had ? `${product.name} removed from your wishlist` : `${product.name} saved to your wishlist`);
     },
     [ids, user]
   );
 
-  const isWishlisted = useCallback((productId: string) => ids.has(productId), [ids]);
-
-  const value = useMemo(
-    () => ({ ids, products, toggle, isWishlisted }),
-    [ids, products, toggle, isWishlisted]
-  );
-
+  const value = useMemo(() => ({ ids, has: (id: string) => ids.includes(id), toggle, count: ids.length }), [ids, toggle]);
   return <WishlistContext.Provider value={value}>{children}</WishlistContext.Provider>;
 };
 
-export const useWishlist = (): WishlistContextValue => {
+export const useWishlist = () => {
   const ctx = useContext(WishlistContext);
-  if (!ctx) throw new Error('useWishlist must be used within a WishlistProvider');
+  if (!ctx) throw new Error('useWishlist must be used within WishlistProvider');
   return ctx;
 };

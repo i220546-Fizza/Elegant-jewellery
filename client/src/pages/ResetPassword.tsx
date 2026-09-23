@@ -1,73 +1,51 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import toast from 'react-hot-toast';
-import { resetPassword as resetPasswordRequest } from '../services/authService';
-import { getErrorMessage } from '../services/api';
+import AuthShell from '../components/account/AuthShell';
+import PasswordField, { strongPassword } from '../components/account/PasswordField';
+import { authApi } from '../services';
 import { useAuth } from '../context/AuthContext';
+import { getErrorMessage } from '../lib/api';
+import { useTitle } from '../lib/useTitle';
 
 const ResetPassword = () => {
-  const { token } = useParams<{ token: string }>();
+  useTitle('Choose a new password');
+  const { token = '' } = useParams();
+  const { setUser } = useAuth();
   const navigate = useNavigate();
-  const { refreshUser } = useAuth();
   const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
-  const [loading, setLoading] = useState(false);
+  const [confirm, setConfirm] = useState('');
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState('');
 
-  useEffect(() => {
-    document.title = 'Reset Password | Elegant Jewellery';
-  }, []);
-
-  const handleSubmit = async (e: React.FormEvent) => {
+  const submit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (password !== confirmPassword) {
-      toast.error('Passwords do not match');
-      return;
-    }
-    if (!token) return;
-    setLoading(true);
+    if (!strongPassword(password)) return setError('Password must be at least 8 characters and include a letter and a number');
+    if (password !== confirm) return setError('Passwords do not match');
+    setBusy(true);
+    setError('');
     try {
-      const { token: authToken } = await resetPasswordRequest(token, password);
-      localStorage.setItem('ej_token', authToken);
-      await refreshUser();
-      toast.success('Password reset successfully!');
-      navigate('/profile');
+      setUser(await authApi.reset(token, password));
+      toast.success('Your password has been updated');
+      navigate('/account', { replace: true });
     } catch (err) {
-      toast.error(getErrorMessage(err));
+      setError(getErrorMessage(err));
     } finally {
-      setLoading(false);
+      setBusy(false);
     }
   };
 
   return (
-    <div className="container-luxe flex min-h-[70vh] items-center justify-center py-16">
-      <div className="card-luxe w-full max-w-md p-8 sm:p-10">
-        <div className="text-center">
-          <p className="section-kicker">Almost There</p>
-          <h1 className="mt-2 font-display text-3xl text-brown-dark">Reset Password</h1>
-        </div>
-        <form onSubmit={handleSubmit} className="mt-8 space-y-4">
-          <input
-            required
-            type="password"
-            placeholder="New Password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            className="input-luxe"
-          />
-          <input
-            required
-            type="password"
-            placeholder="Confirm New Password"
-            value={confirmPassword}
-            onChange={(e) => setConfirmPassword(e.target.value)}
-            className="input-luxe"
-          />
-          <button type="submit" disabled={loading} className="btn-primary w-full">
-            {loading ? 'Updating...' : 'Reset Password'}
-          </button>
-        </form>
-      </div>
-    </div>
+    <AuthShell eyebrow="Account recovery" title="New password">
+      <form onSubmit={submit} className="space-y-8">
+        <PasswordField label="New password" value={password} onChange={setPassword} autoComplete="new-password" showRules />
+        <PasswordField label="Confirm password" value={confirm} onChange={setConfirm} autoComplete="new-password" />
+        {error && <p role="alert" className="border-l-2 border-gold pl-4 text-sm">{error}</p>}
+        <button type="submit" disabled={busy} className="btn-dark w-full">
+          {busy ? 'Saving…' : 'Update password'}
+        </button>
+      </form>
+    </AuthShell>
   );
 };
 

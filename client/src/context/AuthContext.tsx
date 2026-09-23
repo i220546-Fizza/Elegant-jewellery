@@ -1,17 +1,15 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
-import toast from 'react-hot-toast';
+import { authApi } from '../services';
 import type { User } from '../types';
-import * as authService from '../services/authService';
-import { getErrorMessage } from '../services/api';
 
 interface AuthContextValue {
   user: User | null;
   loading: boolean;
-  login: (email: string, password: string) => Promise<void>;
-  register: (name: string, email: string, password: string) => Promise<void>;
-  logout: () => void;
-  refreshUser: () => Promise<void>;
-  updateUser: (user: User) => void;
+  login: (email: string, password: string) => Promise<User>;
+  register: (payload: { name: string; email: string; password: string; newsletter?: boolean }) => Promise<User>;
+  logout: () => Promise<void>;
+  setUser: (user: User | null) => void;
+  refresh: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
@@ -20,65 +18,44 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
 
-  const bootstrap = useCallback(async () => {
-    const token = localStorage.getItem('ej_token');
-    if (!token) {
-      setLoading(false);
-      return;
-    }
+  const refresh = useCallback(async () => {
     try {
-      const currentUser = await authService.fetchCurrentUser();
-      setUser(currentUser);
+      setUser(await authApi.me());
     } catch {
-      localStorage.removeItem('ej_token');
-    } finally {
-      setLoading(false);
+      setUser(null);
     }
   }, []);
 
   useEffect(() => {
-    bootstrap();
-  }, [bootstrap]);
+    refresh().finally(() => setLoading(false));
+  }, [refresh]);
 
   const login = useCallback(async (email: string, password: string) => {
-    const { token, user: loggedInUser } = await authService.loginUser({ email, password });
-    localStorage.setItem('ej_token', token);
-    setUser(loggedInUser);
+    const u = await authApi.login(email, password);
+    setUser(u);
+    return u;
   }, []);
 
-  const register = useCallback(async (name: string, email: string, password: string) => {
-    const { token, user: registeredUser } = await authService.registerUser({ name, email, password });
-    localStorage.setItem('ej_token', token);
-    setUser(registeredUser);
+  const register = useCallback(async (payload: { name: string; email: string; password: string; newsletter?: boolean }) => {
+    const u = await authApi.register(payload);
+    setUser(u);
+    return u;
   }, []);
 
-  const logout = useCallback(() => {
-    localStorage.removeItem('ej_token');
-    setUser(null);
-    toast.success('You have been signed out');
-  }, []);
-
-  const refreshUser = useCallback(async () => {
+  const logout = useCallback(async () => {
     try {
-      const currentUser = await authService.fetchCurrentUser();
-      setUser(currentUser);
-    } catch (err) {
-      toast.error(getErrorMessage(err));
+      await authApi.logout();
+    } finally {
+      setUser(null);
     }
   }, []);
 
-  const updateUser = useCallback((updated: User) => setUser(updated), []);
-
-  const value = useMemo(
-    () => ({ user, loading, login, register, logout, refreshUser, updateUser }),
-    [user, loading, login, register, logout, refreshUser, updateUser]
-  );
-
+  const value = useMemo(() => ({ user, loading, login, register, logout, setUser, refresh }), [user, loading, login, register, logout, refresh]);
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
 
-export const useAuth = (): AuthContextValue => {
+export const useAuth = () => {
   const ctx = useContext(AuthContext);
-  if (!ctx) throw new Error('useAuth must be used within an AuthProvider');
+  if (!ctx) throw new Error('useAuth must be used within AuthProvider');
   return ctx;
 };

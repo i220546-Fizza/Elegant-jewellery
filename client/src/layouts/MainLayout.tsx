@@ -1,43 +1,47 @@
-import { useEffect } from 'react';
 import { Outlet, useLocation } from 'react-router-dom';
-import { Toaster } from 'react-hot-toast';
-import Navbar from '../components/Navbar';
-import Footer from '../components/Footer';
-import ScrollToTop from '../components/ScrollToTop';
-import CartDrawer from '../components/CartDrawer';
-import { useCart } from '../context/CartContext';
+import { motion } from 'framer-motion';
+import { useEffect } from 'react';
+import Navbar from '../components/layout/Navbar';
+import Footer from '../components/layout/Footer';
+import CartDrawer from '../components/layout/CartDrawer';
+import SearchOverlay from '../components/layout/SearchOverlay';
+import MobileMenu from '../components/layout/MobileMenu';
+import QuickView from '../components/product/QuickView';
+import { useUI } from '../context/UIContext';
 
 const MainLayout = () => {
-  const { closeDrawer } = useCart();
-  const { pathname } = useLocation();
+  const location = useLocation();
+  const { setMenuOpen, setSearchOpen, setQuickView } = useUI();
 
   useEffect(() => {
-    closeDrawer();
+    window.scrollTo({ top: 0, behavior: 'instant' as ScrollBehavior });
+    setMenuOpen(false);
+    setSearchOpen(false);
+    setQuickView(null);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [pathname]);
+  }, [location.pathname]);
 
   return (
-    <div className="flex min-h-screen flex-col bg-ivory">
-      <ScrollToTop />
-      <Toaster
-        position="top-center"
-        toastOptions={{
-          style: {
-            background: '#3B2C1F',
-            color: '#FBF6EE',
-            fontSize: '13px',
-            borderRadius: '999px',
-            padding: '10px 18px',
-          },
-          success: { iconTheme: { primary: '#C9A86A', secondary: '#3B2C1F' } },
-        }}
-      />
+    <div className="flex min-h-screen flex-col">
+      <a href="#main" className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[100] focus:bg-ink focus:px-4 focus:py-2 focus:text-ivory">
+        Skip to content
+      </a>
       <Navbar />
-      <main className="flex-1">
+      <motion.main
+        id="main"
+        key={location.pathname}
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.9, ease: [0.22, 1, 0.36, 1] }}
+        className="flex-1"
+      >
         <Outlet />
-      </main>
+      </motion.main>
       <Footer />
       <CartDrawer />
+      <SearchOverlay />
+      <MobileMenu />
+      <QuickView />
     </div>
   );
 };

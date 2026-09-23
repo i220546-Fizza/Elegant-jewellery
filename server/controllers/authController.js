@@ -67,9 +67,9 @@ const logoutUser = (req, res) => {
   res.json({ success: true });
 };
 
-// @route   GET /api/auth/me
+// @route   GET /api/auth/me   (returns user: null for guests rather than a 401)
 const getMe = asyncHandler(async (req, res) => {
-  res.json({ success: true, user: req.user.toPublic() });
+  res.json({ success: true, user: req.user ? req.user.toPublic() : null });
 });
 
 // @route   POST /api/auth/forgot-password
